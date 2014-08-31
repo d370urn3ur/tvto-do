@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">TV To-Do</string>
+    
+    <!-- Action Bar -->
+    <string name="action_search">Search</string>
+    <string name="action_add">Follow Show</string>
+    <string name="action_remove">Remove Show</string>
+
+</resources>

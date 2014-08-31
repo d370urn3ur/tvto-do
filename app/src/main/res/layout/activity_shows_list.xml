@@ -1,0 +1,19 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="activity.ShowsListActivity" >
+
+    <fragment android:name="the.autarch.tvto_do.activity.ShowsListFragment"
+            android:id="@+id/shows_list_fragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:layout="@layout/fragment_shows_list" />
+    
+    <fragment android:name="the.autarch.tvto_do.activity.ShowsSearchFragment"
+            android:id="@+id/shows_search_fragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:layout="@layout/fragment_shows_search" />
+
+</RelativeLayout>

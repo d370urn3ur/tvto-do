@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tvto-do="http://schemas.android.com/apk/res-auto" >
+
+    <item android:id="@+id/action_remove"
+          android:title="@string/action_remove"
+          android:icon="@drawable/ic_action_cancel"
+          tvto-do:showAsAction="ifRoom" />
+    
+    <item android:id="@+id/action_refresh"
+        android:title="@+id/action_refresh"
+        android:icon="@drawable/ic_action_refresh"
+        tvto-do:showAsAction="ifRoom" />
+    
+</menu>
