@@ -2,7 +2,6 @@ package the.autarch.tvto_do.fragment;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.view.ActionMode;
@@ -15,7 +14,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ListView;
 
 import com.octo.android.robospice.persistence.DurationInMillis;
@@ -23,11 +21,12 @@ import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 
 import the.autarch.tvto_do.R;
+import the.autarch.tvto_do.TVTDApplication;
 import the.autarch.tvto_do.adapter.SearchResultAdapter;
 import the.autarch.tvto_do.model.SearchResultJson;
 import the.autarch.tvto_do.model.Show;
 import the.autarch.tvto_do.network.SearchRequest;
-import the.autarch.tvto_do.provider.ShowContract;
+import the.autarch.tvto_do.model.ShowContract;
 
 public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode.Callback {
 
@@ -46,11 +45,6 @@ public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode
 	}
 	
 	@Override
-	public void onDestroyView() {
-		super.onDestroyView();
-	}
-	
-	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		
 		if(_searchAdapter == null) {
@@ -61,14 +55,14 @@ public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode
 		lv.setEmptyView(getView().findViewById(android.R.id.empty));
 		lv.setAdapter(_searchAdapter);
 		lv.setOnItemClickListener(new OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> parent, View cell, int position, long id) {
-				_searchAdapter.toggleExpandedCell(position);
-				updateVisibleCells();
+            @Override
+            public void onItemClick(AdapterView<?> parent, View cell, int position, long id) {
+                _searchAdapter.toggleExpandedCell(position);
+                updateVisibleCells();
 
-                if(_actionMode != null) {
-                    int selectedPosition = (Integer)_actionMode.getTag();
-                    if(selectedPosition == position) {
+                if (_actionMode != null) {
+                    int selectedPosition = (Integer) _actionMode.getTag();
+                    if (selectedPosition == position) {
                         _actionMode.finish();
                         _actionMode = null;
                     } else {
@@ -78,10 +72,10 @@ public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode
                 }
 
                 // Start the CAB using the ActionMode.Callback defined above
-                _actionMode = ((ActionBarActivity)getActivity()).startSupportActionMode(ShowsSearchFragment.this);
+                _actionMode = ((ActionBarActivity) getActivity()).startSupportActionMode(ShowsSearchFragment.this);
                 _actionMode.setTag(position);
-			}
-		});
+            }
+        });
 		
 		super.onActivityCreated(savedInstanceState);
 	}
@@ -144,10 +138,8 @@ public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode
 	}
 	
 	private void addSearchResultToList(SearchResultJson searchResult) {
-
-        ContentValues values = searchResult.toContentValues();
-        ContentResolver cr = getActivity().getContentResolver();
-        cr.insert(ShowContract.ShowColumns.CONTENT_URI, values);
+        Show show = searchResult.toShow();
+        TVTDApplication.model().getShowDao().createInBackground(show);
 	}
 
     public final class ListSearchRequestListener implements RequestListener<SearchResultJson.List> {

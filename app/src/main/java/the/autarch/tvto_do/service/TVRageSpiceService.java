@@ -13,7 +13,7 @@ import retrofit.converter.ConversionException;
 import retrofit.converter.Converter;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
-import the.autarch.tvto_do.model.ExtendedInfoWrapper;
+import the.autarch.tvto_do.model.ExtendedInfoGson;
 import the.autarch.tvto_do.network.TvRageRest;
 
 /**
@@ -72,7 +72,7 @@ public class TVRageSpiceService extends RetrofitGsonSpiceService {
                         values.put(kv[0], kv[1]);
                     }
                 }
-                ExtendedInfoWrapper extInfo = ExtendedInfoWrapper.parseValues(values);
+                ExtendedInfoGson extInfo = ExtendedInfoGson.parseValues(values);
                 return extInfo;
 
             } catch (IOException e) {
@@ -90,7 +90,7 @@ public class TVRageSpiceService extends RetrofitGsonSpiceService {
 
         @Override
         public TypedOutput toBody(Object object) {
-            // TODO: what does this do?
+            // TODO: i think this is only used for uploading
             return null;
         }
     };

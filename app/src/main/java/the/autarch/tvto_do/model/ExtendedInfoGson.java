@@ -6,18 +6,21 @@ import android.text.format.Time;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
-public class ExtendedInfoWrapper {
+public class ExtendedInfoGson {
 
     private static final String SHOW_ID_KEY = "Show ID";
 	private static final String TITLE_KEY = "Next Episode";
 	private static final String DATE_KEY = "GMT+0 NODST";
+    private static final String ENDED_KEY = "Ended";
 
     public String tvRageId;
 	public String nextEpisodeTitle;
 	public Time nextEpisodeTime;
+    public boolean ended;
 	
-	public static ExtendedInfoWrapper parseValues(HashMap<String, String> values) {
-		ExtendedInfoWrapper result = new ExtendedInfoWrapper();
+	public static ExtendedInfoGson parseValues(HashMap<String, String> values) {
+
+		ExtendedInfoGson result = new ExtendedInfoGson();
 
         if(values.containsKey(SHOW_ID_KEY)) {
             result.tvRageId = values.get(SHOW_ID_KEY);
@@ -40,6 +43,10 @@ public class ExtendedInfoWrapper {
 			time.set(millis);
             result.nextEpisodeTime = time;
 		}
+
+        if(values.containsKey(ENDED_KEY)) {
+            // TODO: test ended
+        }
 		
 		return result;
 	}

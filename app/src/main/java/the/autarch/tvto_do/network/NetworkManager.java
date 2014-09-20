@@ -17,9 +17,10 @@ import com.android.volley.toolbox.Volley;
 
 import java.util.HashMap;
 
+import the.autarch.tvto_do.TVTDApplication;
 import the.autarch.tvto_do.model.FileManager;
 import the.autarch.tvto_do.model.Show;
-import the.autarch.tvto_do.provider.ShowContract;
+import the.autarch.tvto_do.model.ShowContract;
 import the.autarch.tvto_do.util.TVTDImageCache;
 
 /**
@@ -80,10 +81,8 @@ public class NetworkManager {
 				if(b != null) {
 					String filename = FileManager.getInstance().writeBitmapToFileForShow(response.getBitmap(), show);
                     if(!TextUtils.isEmpty(filename)) {
-                        ContentResolver cr = _appContext.getContentResolver();
-                        ContentValues values = new ContentValues();
-                        values.put(ShowContract.ShowColumns.POSTER_138_FILEPATH, filename);
-                        cr.update(ShowContract.ShowColumns.contentItemUriFor(show.getId()), values, null, null);
+                        show.setPoster138filepath(filename);
+                        TVTDApplication.model().getShowDao().updateInBackground(show);
                     }
 				}
 				_imageRequests.remove(show);

@@ -24,18 +24,23 @@ import com.octo.android.robospice.persistence.DurationInMillis;
 import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 
+import java.util.List;
+
 import de.greenrobot.event.EventBus;
 import the.autarch.tvto_do.R;
+import the.autarch.tvto_do.TVTDApplication;
 import the.autarch.tvto_do.activity.ShowsListActivity;
 import the.autarch.tvto_do.adapter.ShowAdapter;
 import the.autarch.tvto_do.event.UpdateExtendedInfoEvent;
-import the.autarch.tvto_do.model.ExtendedInfoWrapper;
+import the.autarch.tvto_do.loader.ShowLoader;
+import the.autarch.tvto_do.model.ExtendedInfoGson;
 import the.autarch.tvto_do.model.FileManager;
+import the.autarch.tvto_do.model.Model;
 import the.autarch.tvto_do.model.Show;
 import the.autarch.tvto_do.network.ExtendedInfoRequest;
-import the.autarch.tvto_do.provider.ShowContract;
+import the.autarch.tvto_do.model.ShowContract;
 
-public class ShowsListFragment extends BaseSpiceFragment implements LoaderManager.LoaderCallbacks<Cursor>, ActionMode.Callback {
+public class ShowsListFragment extends BaseSpiceFragment implements LoaderManager.LoaderCallbacks<List<Show>>, ActionMode.Callback {
 	
 	private ShowAdapter _showAdapter;
 	private ActionMode _actionMode;
@@ -90,7 +95,7 @@ public class ShowsListFragment extends BaseSpiceFragment implements LoaderManage
 			}
 		});
 
-		getLoaderManager().initLoader(ShowsListActivity.LOADER_ID_SHOW, null, this);
+        getLoaderManager().initLoader(ShowsListActivity.LOADER_ID_SHOW, null, this);
 	}
 
     @Override
@@ -110,32 +115,25 @@ public class ShowsListFragment extends BaseSpiceFragment implements LoaderManage
 	}
 
 	@Override
-	public Loader<Cursor> onCreateLoader(int loaderId, Bundle args) {
-
-        return new CursorLoader(getActivity(),
-                ShowContract.ShowColumns.CONTENT_URI,
-                ShowContract.allShowsProjection,
-                null,
-                null,
-                ShowContract.ShowColumns.DEFAULT_SORT_ORDER);
+	public Loader<List<Show>> onCreateLoader(int loaderId, Bundle args) {
+        return new ShowLoader(getActivity());
 	}
 
 	@Override
-	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-		_showAdapter.swapCursor(data);
+	public void onLoadFinished(Loader<List<Show>> loader, List<Show> data) {
+		_showAdapter.swapData(data);
 	}
 
 	@Override
-	public void onLoaderReset(Loader<Cursor> loader) {
-		_showAdapter.swapCursor(null);
+	public void onLoaderReset(Loader<List<Show>> loader) {
+		_showAdapter.swapData(null);
 	}
 
 	@Override
 	public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
 
         int selectedPos = (Integer)_actionMode.getTag();
-        Cursor c = (Cursor)_showAdapter.getItem(selectedPos);
-		Show show = new Show(c);
+        Show show = (Show)_showAdapter.getItem(selectedPos);
 		
 		switch(item.getItemId()) {
 			case R.id.action_remove:
@@ -169,12 +167,10 @@ public class ShowsListFragment extends BaseSpiceFragment implements LoaderManage
 	}
 	
 	private void removeShowFromList(Show show) {
-        ContentResolver cr = getActivity().getContentResolver();
-        cr.delete(ShowContract.ShowColumns.contentItemUriFor(show.getId()), null, null);
-        FileManager.getInstance().deleteBitmapForFilename(show.getPoster138filepath());
+        TVTDApplication.model().getShowDao().deleteInBackground(show);
 	}
 
-    public void onEvent(UpdateExtendedInfoEvent ev) {
+    public void onEventMainThread(UpdateExtendedInfoEvent ev) {
         Show s = ev.getShow();
         refreshShowExtendedInfo(s);
     }
@@ -185,7 +181,7 @@ public class ShowsListFragment extends BaseSpiceFragment implements LoaderManage
         getRageManager().execute(req, cacheKey, DurationInMillis.ONE_MINUTE, new ExtendedInfoRequestListener());
 	}
 
-    class ExtendedInfoRequestListener implements RequestListener<ExtendedInfoWrapper> {
+    class ExtendedInfoRequestListener implements RequestListener<ExtendedInfoGson> {
 
         @Override
         public void onRequestFailure(SpiceException spiceException) {
@@ -193,24 +189,26 @@ public class ShowsListFragment extends BaseSpiceFragment implements LoaderManage
         }
 
         @Override
-        public void onRequestSuccess(ExtendedInfoWrapper extendedInfoWrapper) {
+        public void onRequestSuccess(ExtendedInfoGson extendedInfoWrapper) {
 
-            ContentValues cvs = new ContentValues();
+            // TODO: build update query for show
 
-            if(extendedInfoWrapper.hasInfo()) {
-                cvs.put(ShowContract.ShowColumns.NEXT_EPISODE_TITLE, extendedInfoWrapper.nextEpisodeTitle);
-                cvs.put(ShowContract.ShowColumns.NEXT_EPISODE_TIME, extendedInfoWrapper.nextEpisodeTime.toMillis(false));
-            }
-
-            cvs.put(ShowContract.ShowColumns.EXTENDED_INFO_UPDATED, true);
-
-            ContentResolver cr = getActivity().getContentResolver();
-            cr.update(
-                    ShowContract.ShowColumns.CONTENT_URI,
-                    cvs,
-                    ShowContract.ShowColumns.TVRAGE_ID + "= ?",
-                    new String[] { extendedInfoWrapper.tvRageId }
-            );
+//            ContentValues cvs = new ContentValues();
+//
+//            if(extendedInfoWrapper.hasInfo()) {
+//                cvs.put(ShowContract.ShowColumns.NEXT_EPISODE_TITLE, extendedInfoWrapper.nextEpisodeTitle);
+//                cvs.put(ShowContract.ShowColumns.NEXT_EPISODE_TIME, extendedInfoWrapper.nextEpisodeTime.toMillis(false));
+//            }
+//
+//            cvs.put(ShowContract.ShowColumns.EXTENDED_INFO_UPDATED, true);
+//
+//            ContentResolver cr = getActivity().getContentResolver();
+//            cr.update(
+//                    ShowContract.ShowColumns.CONTENT_URI,
+//                    cvs,
+//                    ShowContract.ShowColumns.TVRAGE_ID + "= ?",
+//                    new String[] { extendedInfoWrapper.tvRageId }
+//            );
         }
     }
 

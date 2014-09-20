@@ -1,7 +1,6 @@
 package the.autarch.tvto_do.model;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.text.format.Time;
@@ -9,16 +8,16 @@ import android.text.format.Time;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-import the.autarch.tvto_do.provider.ShowContract;
-
-@DatabaseTable(tableName = ShowContract.TABLE_NAME)
+@DatabaseTable(tableName = ShowContract.TABLE_NAME, daoClass = ShowDaoImpl.class)
 public class Show {
 
     public enum ExtendedInfoStatus {
+
         EXTENDED_INFO_FIRST_FETCH(0), // fetching extended info for the first time
         EXTENDED_INFO_REFRESH(1),     // updating extended info
         EXTENDED_INFO_OUT_OF_DATE(2), //  the extended info status is out of date (wait for user to manually refresh)
-        EXTENDED_INFO_UNKNOWN(3);      // the extended info status is unknown (attempt auto-refresh after elapsed time
+        EXTENDED_INFO_UNKNOWN(3),      // the extended info status is unknown (attempt auto-refresh after elapsed time
+        EXTENDED_INFO_ENDED(4);
 
         private int value;  // used for serialization
 
@@ -49,7 +48,6 @@ public class Show {
     @DatabaseField(columnName = ShowContract.ShowColumns.IMDB_ID) private String imdbId;
     @DatabaseField(columnName = ShowContract.ShowColumns.TVDB_ID) private String tvdbId;
     @DatabaseField(columnName = ShowContract.ShowColumns.TVRAGE_ID) private String tvrageId;
-    @DatabaseField(columnName = ShowContract.ShowColumns.ENDED) private boolean ended;
     @DatabaseField(columnName = ShowContract.ShowColumns.POSTER_138_URL) private String poster138Url;
     @DatabaseField(columnName= ShowContract.ShowColumns.POSTER_300_URL) private String poster300Url;
     @DatabaseField(columnName= ShowContract.ShowColumns.POSTER_138_FILEPATH) private String poster138filepath;
@@ -64,39 +62,10 @@ public class Show {
         // required no-args constructor for ORMLite
     }
 
-    public Show(Cursor c) {
-        try {
-            _id = c.getInt(c.getColumnIndex(ShowContract.ShowColumns._ID));
-            title = c.getString(c.getColumnIndex(ShowContract.ShowColumns.TITLE));
-            year = c.getString(c.getColumnIndex(ShowContract.ShowColumns.YEAR));
-            url = c.getString(c.getColumnIndex(ShowContract.ShowColumns.URL));
-            country = c.getString(c.getColumnIndex(ShowContract.ShowColumns.COUNTRY));
-            overview = c.getString(c.getColumnIndex(ShowContract.ShowColumns.OVERVIEW));
-            imdbId = c.getString(c.getColumnIndex(ShowContract.ShowColumns.IMDB_ID));
-            tvdbId = c.getString(c.getColumnIndex(ShowContract.ShowColumns.TVDB_ID));
-            tvrageId = c.getString(c.getColumnIndex(ShowContract.ShowColumns.TVRAGE_ID));
-            ended = c.getInt(c.getColumnIndex(ShowContract.ShowColumns.ENDED)) != 0;
-            poster138Url = c.getString(c.getColumnIndex(ShowContract.ShowColumns.POSTER_138_URL));
-            poster300Url = c.getString(c.getColumnIndex(ShowContract.ShowColumns.POSTER_300_URL));
-            poster138filepath = c.getString(c.getColumnIndex(ShowContract.ShowColumns.POSTER_138_FILEPATH));
-            poster300filepath = c.getString(c.getColumnIndex(ShowContract.ShowColumns.POSTER_300_FILEPATH));
-            extendedInfoUpdated= c.getInt(c.getColumnIndex(ShowContract.ShowColumns.EXTENDED_INFO_UPDATED)) != 0;
-            nextEpisodeTitle = c.getString(c.getColumnIndex(ShowContract.ShowColumns.NEXT_EPISODE_TITLE));
-
-            long millis = c.getLong(c.getColumnIndex(ShowContract.ShowColumns.NEXT_EPISODE_TIME));
-            if(millis > 0) {
-                nextEpisodeTime = new Time();
-                nextEpisodeTime.set(millis);
-            }
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-    }
-
 	// derived properties
 	public boolean isOutOfDate() {
 		
-		if(ended) {
+		if(extendedInfoStatus == ExtendedInfoStatus.EXTENDED_INFO_ENDED) {
 			return true;
 		}
 		
@@ -110,7 +79,7 @@ public class Show {
 	}
 
 	public String prettyNextEpisode() {
-		if(ended) {
+		if(extendedInfoStatus == ExtendedInfoStatus.EXTENDED_INFO_ENDED) {
 			return "Ended";
 		}
 		
@@ -122,7 +91,7 @@ public class Show {
 	}
 
 	public String prettyNextDate(Context context, int flags) {
-		if(ended) {
+		if(extendedInfoStatus == ExtendedInfoStatus.EXTENDED_INFO_ENDED) {
 			return "N/A";
 		}
 		
@@ -135,13 +104,12 @@ public class Show {
 		return prettyDate;
 	}
 	
-	public void updateWithExtendedInfo(ExtendedInfoWrapper extendedInfo) {
+	public void updateWithExtendedInfo(ExtendedInfoGson extendedInfo) {
 		if(extendedInfo == null) {
 			return;
 		}
 		nextEpisodeTitle = extendedInfo.nextEpisodeTitle;
 		nextEpisodeTime = extendedInfo.nextEpisodeTime;
-		extendedInfoUpdated = true;
 	}
 
     public int getId() {
@@ -180,10 +148,6 @@ public class Show {
         return tvrageId;
     }
 
-    public boolean isEnded() {
-        return ended;
-    }
-
     public String getPoster138Url() {
         return poster138Url;
     }
@@ -204,15 +168,59 @@ public class Show {
         return poster300filepath;
     }
 
-    public boolean isExtendedInfoUpdated() {
-        return extendedInfoUpdated;
-    }
-
     public String getNextEpisodeTitle() {
         return nextEpisodeTitle;
     }
 
     public Time getNextEpisodeTime() {
         return nextEpisodeTime;
+    }
+
+    public ExtendedInfoStatus getExtendedInfoStatus() {
+        return extendedInfoStatus;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public void setOverview(String overview) {
+        this.overview = overview;
+    }
+
+    public void setImdbId(String imdbId) {
+        this.imdbId = imdbId;
+    }
+
+    public void setTvdbId(String tvdbId) {
+        this.tvdbId = tvdbId;
+    }
+
+    public void setTvrageId(String tvrageId) {
+        this.tvrageId = tvrageId;
+    }
+
+    public void setPoster138Url(String poster138Url) {
+        this.poster138Url = poster138Url;
+    }
+
+    public void setPoster300Url(String poster300Url) {
+        this.poster300Url = poster300Url;
+    }
+
+    public void setExtendedInfoStatus(ExtendedInfoStatus extendedInfoStatus) {
+        this.extendedInfoStatus = extendedInfoStatus;
     }
 }

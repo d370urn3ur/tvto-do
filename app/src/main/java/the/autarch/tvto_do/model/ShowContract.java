@@ -1,4 +1,4 @@
-package the.autarch.tvto_do.provider;
+package the.autarch.tvto_do.model;
 
 import android.net.Uri;
 import android.provider.BaseColumns;
@@ -8,7 +8,6 @@ import android.provider.BaseColumns;
  */
 public final class ShowContract {
 
-    public static final String AUTHORITY = "the.autarch.tvto_do.provider";
     public static final String TABLE_NAME = "shows";
 
     private ShowContract() {
@@ -23,15 +22,6 @@ public final class ShowContract {
         // This class cannot be instantiated
         private ShowColumns() {}
 
-        public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/shows");
-        public static Uri contentItemUriFor(int id) {
-            return CONTENT_URI.buildUpon().appendPath(Integer.toString(id)).build();
-        }
-
-        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.google.show";
-
-        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.google.shows";
-
         public static final String TITLE = "title";
         public static final String YEAR = "year";
         public static final String URL = "url";
@@ -40,7 +30,6 @@ public final class ShowContract {
         public static final String IMDB_ID = "imdb_id";
         public static final String TVDB_ID = "tvdb_id";
         public static final String TVRAGE_ID = "tvrage_id";
-        public static final String ENDED = "ended";
         public static final String POSTER_138_URL = "poster_138_url";
         public static final String POSTER_300_URL = "poster_300_url";
         public static final String POSTER_138_FILEPATH = "poster_138_filepath";
@@ -62,7 +51,6 @@ public final class ShowContract {
             ShowColumns.IMDB_ID,
             ShowColumns.TVDB_ID,
             ShowColumns.TVRAGE_ID,
-            ShowColumns.ENDED,
             ShowColumns.POSTER_138_URL,
             ShowColumns.POSTER_300_URL,
             ShowColumns.POSTER_138_FILEPATH,

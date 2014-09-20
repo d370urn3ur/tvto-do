@@ -10,8 +10,12 @@ import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import de.greenrobot.event.EventBus;
 import the.autarch.tvto_do.R;
@@ -21,7 +25,9 @@ import the.autarch.tvto_do.model.Show;
 import the.autarch.tvto_do.network.NetworkManager;
 import the.autarch.tvto_do.util.TVTDImageCache;
 
-public class ShowAdapter extends CursorAdapter {
+public class ShowAdapter extends BaseAdapter {
+
+    private List<Show> _data = new ArrayList<Show>();
 
 	private int _expandedPosition = -1;
 	private TVTDImageCache _imageCache = new TVTDImageCache();
@@ -36,8 +42,7 @@ public class ShowAdapter extends CursorAdapter {
 	private int _oddColor;
 	
 	public ShowAdapter(Context context) {
-
-        super(context, null, 0);
+        super();
 
 		_context = context;
         _inflater = LayoutInflater.from(context);
@@ -49,43 +54,49 @@ public class ShowAdapter extends CursorAdapter {
 	}
 
     @Override
-    public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        View v = _inflater.inflate(R.layout.show_cell, parent, false);
-        ShowCellHolder h = new ShowCellHolder(v);
-        v.setTag(h);
-        return v;
-    }
-
-    @Override
-    public void bindView(View view, Context context, Cursor cursor) {
-
-        Show show = new Show(cursor);
-
-        // update extended info if it is newly added
-        if(!show.isEnded() && !show.isExtendedInfoUpdated()) {
-            UpdateExtendedInfoEvent event = new UpdateExtendedInfoEvent(show);
-            EventBus.getDefault().post(event);
-            NetworkManager.getInstance().downloadAndSaveImageForShow(show);
+    public View getView(int position, View convertView, ViewGroup parent) {
+        if(convertView == null) {
+            convertView = _inflater.inflate(R.layout.show_cell, parent, false);
+            ShowCellHolder h = new ShowCellHolder(convertView);
+            convertView.setTag(h);
         }
 
+        Show show = (Show)getItem(position);
+
         // set cell background
-        int position = cursor.getPosition();
         int bgColor;
-        if(show.isEnded()) {
+        if(show.getExtendedInfoStatus() == Show.ExtendedInfoStatus.EXTENDED_INFO_ENDED) {
             bgColor = _endedColor;
         } else if(show.isOutOfDate()) {
             bgColor = _outOfDateColor;
         } else {
             bgColor = (position % 2 == 0) ? _evenColor : _oddColor;
         }
-        view.setBackgroundColor(bgColor);
+        convertView.setBackgroundColor(bgColor);
 
         // populate cell with data
-        ShowCellHolder holder = (ShowCellHolder)view.getTag();
+        ShowCellHolder holder = (ShowCellHolder)convertView.getTag();
         holder.populateWithShowAtPosition(show, position);
+
+        return convertView;
     }
-	
-	public void expandPosition(Integer position) {
+
+    @Override
+    public Object getItem(int position) {
+        return _data.get(position);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return ((Show)getItem(position)).getId();
+    }
+
+    @Override
+    public int getCount() {
+        return _data.size();
+    }
+
+    public void expandPosition(Integer position) {
 		if(_expandedPosition == position) {
             _expandedPosition = -1;
         } else {
@@ -93,10 +104,11 @@ public class ShowAdapter extends CursorAdapter {
         }
 	}
 
-    @Override
-    public Cursor swapCursor(Cursor newCursor) {
+    public void swapData(List<Show> data) {
         _expandedPosition = -1;
-        return super.swapCursor(newCursor);
+        _data.clear();
+        _data.addAll(data);
+        notifyDataSetChanged();
     }
 
     class ShowCellHolder {

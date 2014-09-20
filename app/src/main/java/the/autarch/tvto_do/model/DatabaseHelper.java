@@ -17,9 +17,7 @@ import java.sql.SQLException;
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
     private static final String DBNAME = "tv-todo.db";
-    private static final int DBVERSION = 1;
-
-    private Dao<Show, Integer> showDao = null;
+    private static final int DBVERSION = 4;
 
     public DatabaseHelper(Context context) {
         super(context, DBNAME, null, DBVERSION);
@@ -59,19 +57,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
      * Returns the Database Access Object (DAO) for our SimpleData class. It will create it or just give the cached
      * value.
      */
-    public Dao<Show, Integer> getShowDao() throws SQLException {
-        if (showDao == null) {
-            showDao = getDao(Show.class);
-        }
-        return showDao;
-    }
-
-    /**
-     * Close the database connections and clear any cached DAOs.
-     */
-    @Override
-    public void close() {
-        super.close();
-        showDao = null;
+    public ShowDaoImpl getShowDao() throws SQLException {
+        return getDao(Show.class);
     }
 }

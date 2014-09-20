@@ -6,8 +6,6 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 
-import the.autarch.tvto_do.provider.ShowContract;
-
 public class SearchResultJson {
 
     public static class List extends ArrayList<SearchResultJson> {
@@ -71,19 +69,21 @@ public class SearchResultJson {
 		return null;
 	}
 
-    public ContentValues toContentValues() {
-        ContentValues cvs = new ContentValues();
-        cvs.put(ShowContract.ShowColumns.TITLE, title);
-        cvs.put(ShowContract.ShowColumns.YEAR, year);
-        cvs.put(ShowContract.ShowColumns.URL, url);
-        cvs.put(ShowContract.ShowColumns.COUNTRY, country);
-        cvs.put(ShowContract.ShowColumns.OVERVIEW, overview);
-        cvs.put(ShowContract.ShowColumns.IMDB_ID, imdb_id);
-        cvs.put(ShowContract.ShowColumns.TVDB_ID, tvdb_id);
-        cvs.put(ShowContract.ShowColumns.TVRAGE_ID, tvrage_id);
-        cvs.put(ShowContract.ShowColumns.ENDED, ended);
-        cvs.put(ShowContract.ShowColumns.POSTER_138_URL, getPoster138Url());
-        cvs.put(ShowContract.ShowColumns.POSTER_300_URL, getPoster300Url());
-        return cvs;
+    public Show toShow() {
+
+        Show show = new Show();
+        show.setTitle(title);
+        show.setYear(year);
+        show.setUrl(url);
+        show.setCountry(country);
+        show.setOverview(overview);
+        show.setImdbId(imdb_id);
+        show.setTvdbId(tvdb_id);
+        show.setTvrageId(tvrage_id);
+        show.setPoster138Url(getPoster138Url());
+        show.setPoster300Url(getPoster300Url());
+        show.setExtendedInfoStatus(Show.ExtendedInfoStatus.EXTENDED_INFO_UNKNOWN);
+
+        return show;
     }
 }

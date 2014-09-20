@@ -31,10 +31,6 @@
         <service android:name=".service.TVRageSpiceService"
             android:exported="false" />
 
-        <provider android:authorities="the.autarch.tvto_do.provider"
-            android:exported="false"
-            android:name="the.autarch.tvto_do.provider.TvToDoContentProvider" />
-
     </application>
 
 </manifest>
