@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import the.autarch.tvto_do.R;
-import the.autarch.tvto_do.model.SearchResultWrapper;
+import the.autarch.tvto_do.model.SearchResultJson;
 import the.autarch.tvto_do.network.NetworkManager;
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -16,10 +16,10 @@ import android.widget.TextView;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
 
-public class SearchResultAdapter extends ArrayAdapter<SearchResultWrapper> {
+public class SearchResultAdapter extends ArrayAdapter<SearchResultJson> {
 
 	private int _layoutRes;
-	private ArrayList<Integer> _expandedCells = new ArrayList<Integer>();
+    private int _expandedPosition = -1;
 	
 	public SearchResultAdapter(Context context, int resource) {
 		super(context, resource);
@@ -37,41 +37,47 @@ public class SearchResultAdapter extends ArrayAdapter<SearchResultWrapper> {
 			v.setTag(holder);
 		}
 		
-		SearchResultWrapper searchResult = getItem(position);
+		SearchResultJson searchResult = getItem(position);
+
+        boolean expanded = _expandedPosition == position;
 		
 		// set background color
-		int mod = position % 2;
-		int colorRef = (mod == 0) ? R.color.holo_gray_bright : R.color.holo_blue_light;
-		v.setBackgroundColor(getContext().getResources().getColor(colorRef));
+        if(expanded) {
+            v.setBackgroundColor(getContext().getResources().getColor(R.color.holo_blue_bright));
+        } else {
+            int mod = position % 2;
+            int colorRef = (mod == 0) ? R.color.holo_gray_bright : R.color.holo_gray_light;
+            v.setBackgroundColor(getContext().getResources().getColor(colorRef));
+        }
 		
 		SearchResultCellHolder holder = (SearchResultCellHolder)v.getTag();
-		holder.loadSearchResult(searchResult);
+		holder.loadSearchResult(searchResult, expanded);
 		return v;
 	}
 	
-	public void supportAddAll(Collection<SearchResultWrapper> data) {
-		for(SearchResultWrapper s : data) {
+	public void supportAddAll(Collection<SearchResultJson> data) {
+		for(SearchResultJson s : data) {
 			add(s);
 		}
 	}
 	
 	public void empty() {
-		ArrayList<SearchResultWrapper> items = new ArrayList<SearchResultWrapper>();
+		ArrayList<SearchResultJson> items = new ArrayList<SearchResultJson>();
 		for(int i=0; i < getCount(); ++i) {
 			items.add(getItem(i));
 		}
-		for(SearchResultWrapper s : items) {
+		for(SearchResultJson s : items) {
 			remove(s);
 		}
-		_expandedCells.clear();
+		_expandedPosition = -1;
 	}
 	
-	public void toggleExpandedCell(Integer position) {
-		if(_expandedCells.contains(position)) {
-			_expandedCells.remove(position);
-		} else {
-			_expandedCells.add(position);
-		}
+	public void toggleExpandedCell(int position) {
+        if(_expandedPosition == position) {
+            _expandedPosition = -1;
+        } else {
+            _expandedPosition = position;
+        }
 	}
 	
 	class SearchResultCellHolder {
@@ -92,7 +98,7 @@ public class SearchResultAdapter extends ArrayAdapter<SearchResultWrapper> {
 			_overview = (TextView)root.findViewById(R.id.search_cell_overview);
 		}
 		
-		void loadSearchResult(final SearchResultWrapper searchResult) {
+		void loadSearchResult(final SearchResultJson searchResult, boolean expanded) {
 			
 			if(searchResult.hasPoster()) {
 				ImageLoader il = NetworkManager.getInstance().getImageLoader();
@@ -108,7 +114,7 @@ public class SearchResultAdapter extends ArrayAdapter<SearchResultWrapper> {
 			}
 			_year.setText(searchResult.year);
 			_overview.setText(searchResult.overview);
-			if(_expandedCells.contains(Integer.valueOf(getPosition(searchResult)))) {
+			if(expanded) {
 				_overview.setVisibility(View.VISIBLE);
 			} else {
 				_overview.setVisibility(View.GONE);

@@ -13,12 +13,9 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
-
-        <meta-data android:name="AA_DB_NAME" android:value="tvto_do.db" />
-        <meta-data android:name="AA_DB_VERSION" android:value="1" />
         
         <activity
-            android:name="the.autarch.tvto_do.activity.ShowsListActivity"
+            android:name=".activity.ShowsListActivity"
             android:label="@string/app_name" >
 
             <intent-filter>
@@ -27,6 +24,16 @@
             </intent-filter>
 
         </activity>
+
+        <service android:name=".service.TraktSpiceService"
+            android:exported="false" />
+
+        <service android:name=".service.TVRageSpiceService"
+            android:exported="false" />
+
+        <provider android:authorities="the.autarch.tvto_do.provider"
+            android:exported="false"
+            android:name="the.autarch.tvto_do.provider.TvToDoContentProvider" />
 
     </application>
 

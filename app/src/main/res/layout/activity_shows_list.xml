@@ -4,13 +4,13 @@
     android:layout_height="match_parent"
     tools:context="activity.ShowsListActivity" >
 
-    <fragment android:name="the.autarch.tvto_do.activity.ShowsListFragment"
+    <fragment android:name="the.autarch.tvto_do.fragment.ShowsListFragment"
             android:id="@+id/shows_list_fragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             tools:layout="@layout/fragment_shows_list" />
     
-    <fragment android:name="the.autarch.tvto_do.activity.ShowsSearchFragment"
+    <fragment android:name="the.autarch.tvto_do.fragment.ShowsSearchFragment"
             android:id="@+id/shows_search_fragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

@@ -1,25 +1,44 @@
 package the.autarch.tvto_do.activity;
 
-import the.autarch.tvto_do.R;
-import the.autarch.tvto_do.model.DataManager;
-import the.autarch.tvto_do.model.SearchResultWrapper;
-import the.autarch.tvto_do.model.Show;
-import the.autarch.tvto_do.model.ShowDataSource;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.MenuItemCompat.OnActionExpandListener;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.SearchView.OnQueryTextListener;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class ShowsListActivity extends ActionBarActivity implements ShowsSearchFragment.Callback {
+import java.util.Timer;
+import java.util.TimerTask;
+
+import de.greenrobot.event.EventBus;
+import the.autarch.tvto_do.R;
+import the.autarch.tvto_do.fragment.ShowsSearchFragment;
+import the.autarch.tvto_do.model.SearchResultJson;
+import the.autarch.tvto_do.model.Show;
+
+public class ShowsListActivity extends BaseSpiceActivity {
 
 	public static final int LOADER_ID_SHOW = 1;
 	private static final String KEY_STATE_CURRENT_FRAGMENT = "ShowsListActivity.key_state_current_fragment";
 	private boolean _isSearching = false;
+    private static final int SEARCH_QUERY_THRESHOLD_MILLIS = 2 * 1000;
+
+    private Handler _searchDelayedHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            _searchTimer.cancel();
+            _searchTimer = null;
+            searchForText((String)msg.obj);
+        }
+    };
+    private Timer _searchTimer;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +54,17 @@ public class ShowsListActivity extends ActionBarActivity implements ShowsSearchF
 			}
 		}
 	}
-	
-	@Override
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(_searchTimer != null) {
+            _searchTimer.cancel();
+            _searchTimer = null;
+        }
+    }
+
+    @Override
 	protected void onSaveInstanceState(Bundle outState) {
 		outState.putBoolean(KEY_STATE_CURRENT_FRAGMENT, _isSearching);
 		super.onSaveInstanceState(outState);
@@ -52,16 +80,37 @@ public class ShowsListActivity extends ActionBarActivity implements ShowsSearchF
 	    searchView.setOnQueryTextListener(new OnQueryTextListener() {
 
 			@Override
-			public boolean onQueryTextChange(String searchText) {
-				ShowsSearchFragment searchFrag = (ShowsSearchFragment)getSupportFragmentManager().findFragmentById(R.id.shows_search_fragment);
-				searchFrag.searchForText(searchText);
+			public boolean onQueryTextChange(final String searchText) {
+
+                if(_searchTimer != null) {
+                    _searchTimer.cancel();
+                    _searchTimer = null;
+                }
+
+                if(!TextUtils.isEmpty(searchText)) {
+
+                    _searchTimer = new Timer();
+                    _searchTimer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            Message m = _searchDelayedHandler.obtainMessage(0, searchText);
+                            _searchDelayedHandler.sendMessage(m);
+                        }
+                    }, SEARCH_QUERY_THRESHOLD_MILLIS);
+                }
+
 				return true;
 			}
 
 			@Override
 			public boolean onQueryTextSubmit(String searchText) {
-				ShowsSearchFragment searchFrag = (ShowsSearchFragment)getSupportFragmentManager().findFragmentById(R.id.shows_search_fragment);
-				searchFrag.searchForText(searchText);
+
+                if(_searchTimer != null) {
+                    _searchTimer.cancel();
+                    _searchTimer = null;
+                }
+
+				searchForText(searchText);
 				return true;
 			}
 	    });
@@ -85,14 +134,6 @@ public class ShowsListActivity extends ActionBarActivity implements ShowsSearchF
 	    
 	    return super.onCreateOptionsMenu(menu);
 	}
-
-	@Override
-	public void userSelectedSearchResult(SearchResultWrapper searchResult) {
-		Show newShow = new Show();
-		newShow.hydrateFromSearchResult(searchResult);
-		ShowDataSource showDataSource = DataManager.getInstance().getShowDataSource();
-		showDataSource.insert(newShow);
-	}
 	
 	private void hideSearch() {
 		_isSearching = false;
@@ -105,4 +146,10 @@ public class ShowsListActivity extends ActionBarActivity implements ShowsSearchF
 		Fragment searchFrag = getSupportFragmentManager().findFragmentById(R.id.shows_search_fragment);
 		getSupportFragmentManager().beginTransaction().show(searchFrag).commit();
 	}
+
+    private void searchForText(String query) {
+        Log.e(getClass().getSimpleName(), "searching for query: " + query);
+        ShowsSearchFragment searchFrag = (ShowsSearchFragment)getSupportFragmentManager().findFragmentById(R.id.shows_search_fragment);
+        searchFrag.searchForText(query);
+    }
 }

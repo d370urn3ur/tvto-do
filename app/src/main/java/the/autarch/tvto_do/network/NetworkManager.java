@@ -1,14 +1,10 @@
 package the.autarch.tvto_do.network;
 
-import java.util.HashMap;
-
-import the.autarch.tvto_do.model.DataManager;
-import the.autarch.tvto_do.model.FileManager;
-import the.autarch.tvto_do.model.Show;
-import the.autarch.tvto_do.util.OkHttpStack;
-import the.autarch.tvto_do.util.TVTDImageCache;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.android.volley.RequestQueue;
@@ -19,6 +15,13 @@ import com.android.volley.toolbox.ImageLoader.ImageContainer;
 import com.android.volley.toolbox.ImageLoader.ImageListener;
 import com.android.volley.toolbox.Volley;
 
+import java.util.HashMap;
+
+import the.autarch.tvto_do.model.FileManager;
+import the.autarch.tvto_do.model.Show;
+import the.autarch.tvto_do.provider.ShowContract;
+import the.autarch.tvto_do.util.TVTDImageCache;
+
 /**
  * Singleton that instantiates and provides access to the request queue, image loader, and URL templates
  * @author jpierce
@@ -27,12 +30,13 @@ import com.android.volley.toolbox.Volley;
 public class NetworkManager {
 	
 	private static NetworkManager _instance = null;
-	
+
 	private static RequestQueue _requestQueue = null;
 	private static ImageCache _imageCache = null;
 	private static ImageLoader _imageLoader = null;
-	
-	HashMap<String, ImageContainer> _imageRequests = new HashMap<String, ImageContainer>();
+
+    private Context _appContext;
+	private HashMap<String, ImageContainer> _imageRequests = new HashMap<String, ImageContainer>();
 	
 	public static void initialize(Context context) {
 		_instance = new NetworkManager(context.getApplicationContext());
@@ -46,21 +50,15 @@ public class NetworkManager {
 	}
 	
 	private NetworkManager(Context context) {
-		_requestQueue = Volley.newRequestQueue(context.getApplicationContext(), new OkHttpStack());
+        _appContext = context.getApplicationContext();
+		_requestQueue = Volley.newRequestQueue(context.getApplicationContext());
 		_imageCache = new TVTDImageCache();
 		_imageLoader = new ImageLoader(_requestQueue, _imageCache);
 	}
-	
-	public RequestQueue getRequestQueue() {
-		return _requestQueue;
-	}
+
 	
 	public ImageLoader getImageLoader() {
 		return _imageLoader;
-	}
-	
-	public ImageCache getImageCache() {
-		return _imageCache;
 	}
 	
 	public void downloadAndSaveImageForShow(final Show show) {
@@ -69,7 +67,7 @@ public class NetworkManager {
 			return;
 		}
 		
-		ImageContainer ic = _imageLoader.get(show.poster138Url, new ImageListener() {
+		ImageContainer ic = _imageLoader.get(show.getPoster138Url(), new ImageListener() {
 
 			@Override
 			public void onErrorResponse(VolleyError error) {
@@ -81,15 +79,19 @@ public class NetworkManager {
 				Bitmap b = response.getBitmap();
 				if(b != null) {
 					String filename = FileManager.getInstance().writeBitmapToFileForShow(response.getBitmap(), show);
-					show.poster138filepath = filename;
-					DataManager.getInstance().getShowDataSource().update(show);
+                    if(!TextUtils.isEmpty(filename)) {
+                        ContentResolver cr = _appContext.getContentResolver();
+                        ContentValues values = new ContentValues();
+                        values.put(ShowContract.ShowColumns.POSTER_138_FILEPATH, filename);
+                        cr.update(ShowContract.ShowColumns.contentItemUriFor(show.getId()), values, null, null);
+                    }
 				}
 				_imageRequests.remove(show);
 			}
 		});
 		
 		if(ic.getBitmap() == null) {
-			_imageRequests.put(show.tvrageId, ic);
+			_imageRequests.put(show.getTvrageId(), ic);
 		}
 	}
 }
