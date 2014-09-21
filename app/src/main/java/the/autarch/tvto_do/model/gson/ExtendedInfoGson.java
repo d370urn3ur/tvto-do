@@ -1,4 +1,4 @@
-package the.autarch.tvto_do.model;
+package the.autarch.tvto_do.model.gson;
 
 import android.text.TextUtils;
 import android.text.format.Time;
@@ -16,7 +16,7 @@ public class ExtendedInfoGson {
     public String tvRageId;
 	public String nextEpisodeTitle;
 	public Time nextEpisodeTime;
-    public boolean ended;
+    private boolean ended;
 	
 	public static ExtendedInfoGson parseValues(HashMap<String, String> values) {
 
@@ -45,7 +45,8 @@ public class ExtendedInfoGson {
 		}
 
         if(values.containsKey(ENDED_KEY)) {
-            // TODO: test ended
+            String ended = values.get(ENDED_KEY);
+            result.ended = !TextUtils.isEmpty(ended);
         }
 		
 		return result;
@@ -53,6 +54,10 @@ public class ExtendedInfoGson {
 
     public boolean hasInfo() {
         return !TextUtils.isEmpty(tvRageId) && (!TextUtils.isEmpty(nextEpisodeTitle) || nextEpisodeTime != null);
+    }
+
+    public boolean hasEnded() {
+        return ended;
     }
 
     /* EXAMPLES:

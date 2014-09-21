@@ -1,15 +1,16 @@
-package the.autarch.tvto_do.model;
+package the.autarch.tvto_do.model.database;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
-import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 
 import java.sql.SQLException;
+
+import the.autarch.tvto_do.R;
 
 /**
  * Created by jpierce on 9/13/14.
@@ -17,10 +18,10 @@ import java.sql.SQLException;
 public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
     private static final String DBNAME = "tv-todo.db";
-    private static final int DBVERSION = 4;
+    private static final int DBVERSION = 5;
 
     public DatabaseHelper(Context context) {
-        super(context, DBNAME, null, DBVERSION);
+        this(context, R.raw.ormlite_config);
     }
 
     public DatabaseHelper(Context context, int configFileId) {

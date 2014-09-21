@@ -1,7 +1,5 @@
 package the.autarch.tvto_do.fragment;
 
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.view.ActionMode;
@@ -23,10 +21,9 @@ import com.octo.android.robospice.request.listener.RequestListener;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.TVTDApplication;
 import the.autarch.tvto_do.adapter.SearchResultAdapter;
-import the.autarch.tvto_do.model.SearchResultJson;
-import the.autarch.tvto_do.model.Show;
+import the.autarch.tvto_do.model.gson.SearchResultGson;
+import the.autarch.tvto_do.model.database.Show;
 import the.autarch.tvto_do.network.SearchRequest;
-import the.autarch.tvto_do.model.ShowContract;
 
 public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode.Callback {
 
@@ -90,7 +87,7 @@ public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode
         SearchRequest req = new SearchRequest(searchText);
         String cacheKey = req.createCacheKey();
 
-        getTraktManager().cancel(SearchResultJson.class, cacheKey);
+        getTraktManager().cancel(SearchResultGson.class, cacheKey);
 
         getTraktManager().execute(req, cacheKey, DurationInMillis.ONE_MINUTE, new ListSearchRequestListener());
 	}
@@ -110,7 +107,7 @@ public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode
 		switch(item.getItemId()) {
 			case R.id.action_add:
                 int selectedPosition = (Integer)_actionMode.getTag();
-				SearchResultJson searchResult = _searchAdapter.getItem(selectedPosition);
+				SearchResultGson searchResult = _searchAdapter.getItem(selectedPosition);
 				addSearchResultToList(searchResult);
 				mode.finish();
 				return true;
@@ -137,12 +134,12 @@ public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode
 		return false;
 	}
 	
-	private void addSearchResultToList(SearchResultJson searchResult) {
+	private void addSearchResultToList(SearchResultGson searchResult) {
         Show show = searchResult.toShow();
         TVTDApplication.model().getShowDao().createInBackground(show);
 	}
 
-    public final class ListSearchRequestListener implements RequestListener<SearchResultJson.List> {
+    public final class ListSearchRequestListener implements RequestListener<SearchResultGson.List> {
 
         @Override
         public void onRequestFailure(SpiceException spiceException) {
@@ -151,7 +148,7 @@ public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode
         }
 
         @Override
-        public void onRequestSuccess(SearchResultJson.List searchResultJsons) {
+        public void onRequestSuccess(SearchResultGson.List searchResultJsons) {
             Log.e(getClass().getSimpleName(), "got request success");
             _searchAdapter.empty();
             _searchAdapter.supportAddAll(searchResultJsons);

@@ -3,15 +3,21 @@ package the.autarch.tvto_do.loader;
 import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;
 
+import com.j256.ormlite.stmt.PreparedQuery;
+import com.j256.ormlite.stmt.QueryBuilder;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import de.greenrobot.event.EventBus;
 import the.autarch.tvto_do.TVTDApplication;
-import the.autarch.tvto_do.model.Model;
-import the.autarch.tvto_do.model.Show;
-import the.autarch.tvto_do.model.ShowDaoImpl;
+import the.autarch.tvto_do.event.DatabaseInitializedEvent;
+import the.autarch.tvto_do.event.ShowCreatedEvent;
+import the.autarch.tvto_do.event.ShowDeletedEvent;
+import the.autarch.tvto_do.event.ShowUpdatedEvent;
+import the.autarch.tvto_do.model.database.Show;
+import the.autarch.tvto_do.model.database.ShowDao;
 
 /**
  * Created by jpierce on 9/20/14.
@@ -29,7 +35,12 @@ public class ShowLoader extends AsyncTaskLoader<List<Show>> {
 
         List<Show> data = new ArrayList<Show>();
         try {
-            data = TVTDApplication.model().getShowDao().queryForAll();
+            ShowDao dao = TVTDApplication.model().getShowDao();
+
+            QueryBuilder<Show, Integer> qb = dao.queryBuilder();
+            qb.orderBy(Show.ShowColumns.DEFAULT_SORT_ORDER, Show.ShowColumns.DEFAULT_SORT_ASCENDING);
+            PreparedQuery<Show> query = qb.prepare();
+            data = dao.query(query);
 
         } catch(SQLException e) {
             e.printStackTrace();
@@ -123,19 +134,19 @@ public class ShowLoader extends AsyncTaskLoader<List<Show>> {
         // should be released here.
     }
 
-    public void onEventMainThread(ShowDaoImpl.ShowCreatedEvent event) {
+    public void onEventMainThread(ShowCreatedEvent event) {
         onContentChanged();
     }
 
-    public void onEventMainThread(ShowDaoImpl.ShowUpdatedEvent event) {
+    public void onEventMainThread(ShowUpdatedEvent event) {
         onContentChanged();
     }
 
-    public void onEventMainThread(ShowDaoImpl.ShowDeletedEvent event) {
+    public void onEventMainThread(ShowDeletedEvent event) {
         onContentChanged();
     }
 
-    public void onEventMainThread(Model.DatabaseInitializedEvent event) {
+    public void onEventMainThread(DatabaseInitializedEvent event) {
         onContentChanged();
     }
 }

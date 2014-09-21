@@ -1,15 +1,15 @@
 package the.autarch.tvto_do.event;
 
-import the.autarch.tvto_do.model.Show;
+import the.autarch.tvto_do.model.database.Show;
 
 /**
- * Created by jpierce on 9/14/14.
+ * Created by jpierce on 9/21/14.
  */
-public class UpdateExtendedInfoEvent {
+public class ShowCreatedEvent {
 
     private Show show;
 
-    public UpdateExtendedInfoEvent(Show show) {
+    public ShowCreatedEvent(Show show) {
         this.show = show;
     }
 

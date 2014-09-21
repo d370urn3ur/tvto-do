@@ -1,14 +1,14 @@
-package the.autarch.tvto_do.model;
-
-import android.content.ContentValues;
+package the.autarch.tvto_do.model.gson;
 
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 
-public class SearchResultJson {
+import the.autarch.tvto_do.model.database.Show;
 
-    public static class List extends ArrayList<SearchResultJson> {
+public class SearchResultGson {
+
+    public static class List extends ArrayList<SearchResultGson> {
     }
 
     @SerializedName("title") public String title;
@@ -19,7 +19,7 @@ public class SearchResultJson {
     @SerializedName("imdb_id") public String imdb_id;
     @SerializedName("tvdb_id") public String tvdb_id;
     @SerializedName("tvrage_id") public String tvrage_id;
-    @SerializedName("ended") private String ended;
+    @SerializedName("ended") private boolean ended;
     @SerializedName("images") private ImagesWrapper images;
 	
 	public class ImagesWrapper {
@@ -32,7 +32,7 @@ public class SearchResultJson {
 	}
 	
 	public boolean hasEnded() {
-		return Boolean.parseBoolean(ended);
+		return ended;
 	}
 	
 	public String prettyStatus() {
@@ -82,7 +82,11 @@ public class SearchResultJson {
         show.setTvrageId(tvrage_id);
         show.setPoster138Url(getPoster138Url());
         show.setPoster300Url(getPoster300Url());
-        show.setExtendedInfoStatus(Show.ExtendedInfoStatus.EXTENDED_INFO_UNKNOWN);
+        if(ended) {
+            show.setExtendedInfoStatus(Show.ExtendedInfoStatus.EXTENDED_INFO_ENDED);
+        } else {
+            show.setExtendedInfoStatus(Show.ExtendedInfoStatus.EXTENDED_INFO_UNKNOWN);
+        }
 
         return show;
     }

@@ -1,4 +1,4 @@
-package the.autarch.tvto_do.model;
+package the.autarch.tvto_do.model.database;
 
 import com.j256.ormlite.dao.Dao;
 

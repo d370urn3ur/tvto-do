@@ -1,5 +1,6 @@
 package the.autarch.tvto_do.activity;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -13,19 +14,32 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.j256.ormlite.stmt.PreparedQuery;
+import com.j256.ormlite.stmt.QueryBuilder;
+import com.octo.android.robospice.persistence.DurationInMillis;
+
+import java.sql.SQLException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import de.greenrobot.event.EventBus;
 import the.autarch.tvto_do.R;
+import the.autarch.tvto_do.TVTDApplication;
+import the.autarch.tvto_do.event.DatabaseInitializedEvent;
+import the.autarch.tvto_do.event.UpdateExpiredExtendedInfoEvent;
 import the.autarch.tvto_do.fragment.ShowsSearchFragment;
-import the.autarch.tvto_do.model.SearchResultJson;
-import the.autarch.tvto_do.model.Show;
+import the.autarch.tvto_do.model.database.Show;
+import the.autarch.tvto_do.model.gson.SearchResultGson;
+import the.autarch.tvto_do.network.ExtendedInfoRequest;
+import the.autarch.tvto_do.network.ExtendedInfoRequestListener;
+import the.autarch.tvto_do.network.SearchRequest;
 
 public class ShowsListActivity extends BaseSpiceActivity {
 
 	public static final int LOADER_ID_SHOW = 1;
-	private static final String KEY_STATE_CURRENT_FRAGMENT = "ShowsListActivity.key_state_current_fragment";
 	private boolean _isSearching = false;
     private static final int SEARCH_QUERY_THRESHOLD_MILLIS = 2 * 1000;
 
@@ -44,16 +58,19 @@ public class ShowsListActivity extends BaseSpiceActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_shows_list);
-		
-		if(savedInstanceState == null) {
-			hideSearch();
-		} else {
-			_isSearching = savedInstanceState.getBoolean(KEY_STATE_CURRENT_FRAGMENT);
-			if(!_isSearching) {
-				hideSearch();
-			}
-		}
 	}
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
+    }
 
     @Override
     protected void onPause() {
@@ -63,12 +80,6 @@ public class ShowsListActivity extends BaseSpiceActivity {
             _searchTimer = null;
         }
     }
-
-    @Override
-	protected void onSaveInstanceState(Bundle outState) {
-		outState.putBoolean(KEY_STATE_CURRENT_FRAGMENT, _isSearching);
-		super.onSaveInstanceState(outState);
-	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -137,19 +148,37 @@ public class ShowsListActivity extends BaseSpiceActivity {
 	
 	private void hideSearch() {
 		_isSearching = false;
-		Fragment searchFrag = getSupportFragmentManager().findFragmentById(R.id.shows_search_fragment);
-		getSupportFragmentManager().beginTransaction().hide(searchFrag).commit();
+        getSupportFragmentManager().popBackStack();
+//		Fragment searchFrag = getSupportFragmentManager().findFragmentById(R.id.shows_search_fragment);
+//		getSupportFragmentManager().beginTransaction().hide(searchFrag).commit();
 	}
 	
 	private void showSearch() {
 		_isSearching = true;
-		Fragment searchFrag = getSupportFragmentManager().findFragmentById(R.id.shows_search_fragment);
-		getSupportFragmentManager().beginTransaction().show(searchFrag).commit();
+        Fragment searchFrag = Fragment.instantiate(this, ShowsSearchFragment.class.getName());
+        getSupportFragmentManager()
+                .beginTransaction()
+                .add(R.id.fragment_container, searchFrag, searchFrag.getClass().getName())
+                .addToBackStack(null)
+                .commit();
+
+//		Fragment searchFrag = getSupportFragmentManager().findFragmentById(R.id.shows_search_fragment);
+//		getSupportFragmentManager().beginTransaction().show(searchFrag).addToBackStack(null).commit();
 	}
 
     private void searchForText(String query) {
-        Log.e(getClass().getSimpleName(), "searching for query: " + query);
-        ShowsSearchFragment searchFrag = (ShowsSearchFragment)getSupportFragmentManager().findFragmentById(R.id.shows_search_fragment);
-        searchFrag.searchForText(query);
+        ShowsSearchFragment searchFrag = (ShowsSearchFragment)getSupportFragmentManager().findFragmentByTag(ShowsSearchFragment.class.getName());
+        if(searchFrag != null) {
+            searchFrag.searchForText(query);
+        }
+    }
+
+    public void onEventMainThread(UpdateExpiredExtendedInfoEvent ev) {
+        List<Show> shows = ev.getExpiredShows();
+        for(Show s : shows) {
+            ExtendedInfoRequest req = new ExtendedInfoRequest(s.getTvrageId());
+            String cacheKey = req.createCacheKey();
+            getTvRageManager().execute(req, cacheKey, DurationInMillis.ONE_MINUTE, new ExtendedInfoRequestListener(s));
+        }
     }
 }

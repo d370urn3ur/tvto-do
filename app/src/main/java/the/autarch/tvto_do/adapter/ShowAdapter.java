@@ -2,9 +2,7 @@ package the.autarch.tvto_do.adapter;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.support.v4.widget.CursorAdapter;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
@@ -17,11 +15,9 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.greenrobot.event.EventBus;
 import the.autarch.tvto_do.R;
-import the.autarch.tvto_do.event.UpdateExtendedInfoEvent;
 import the.autarch.tvto_do.model.FileManager;
-import the.autarch.tvto_do.model.Show;
+import the.autarch.tvto_do.model.database.Show;
 import the.autarch.tvto_do.network.NetworkManager;
 import the.autarch.tvto_do.util.TVTDImageCache;
 

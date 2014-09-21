@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import the.autarch.tvto_do.R;
-import the.autarch.tvto_do.model.SearchResultJson;
+import the.autarch.tvto_do.model.gson.SearchResultGson;
 import the.autarch.tvto_do.network.NetworkManager;
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -16,7 +16,7 @@ import android.widget.TextView;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
 
-public class SearchResultAdapter extends ArrayAdapter<SearchResultJson> {
+public class SearchResultAdapter extends ArrayAdapter<SearchResultGson> {
 
 	private int _layoutRes;
     private int _expandedPosition = -1;
@@ -37,7 +37,7 @@ public class SearchResultAdapter extends ArrayAdapter<SearchResultJson> {
 			v.setTag(holder);
 		}
 		
-		SearchResultJson searchResult = getItem(position);
+		SearchResultGson searchResult = getItem(position);
 
         boolean expanded = _expandedPosition == position;
 		
@@ -55,18 +55,18 @@ public class SearchResultAdapter extends ArrayAdapter<SearchResultJson> {
 		return v;
 	}
 	
-	public void supportAddAll(Collection<SearchResultJson> data) {
-		for(SearchResultJson s : data) {
+	public void supportAddAll(Collection<SearchResultGson> data) {
+		for(SearchResultGson s : data) {
 			add(s);
 		}
 	}
 	
 	public void empty() {
-		ArrayList<SearchResultJson> items = new ArrayList<SearchResultJson>();
+		ArrayList<SearchResultGson> items = new ArrayList<SearchResultGson>();
 		for(int i=0; i < getCount(); ++i) {
 			items.add(getItem(i));
 		}
-		for(SearchResultJson s : items) {
+		for(SearchResultGson s : items) {
 			remove(s);
 		}
 		_expandedPosition = -1;
@@ -98,7 +98,7 @@ public class SearchResultAdapter extends ArrayAdapter<SearchResultJson> {
 			_overview = (TextView)root.findViewById(R.id.search_cell_overview);
 		}
 		
-		void loadSearchResult(final SearchResultJson searchResult, boolean expanded) {
+		void loadSearchResult(final SearchResultGson searchResult, boolean expanded) {
 			
 			if(searchResult.hasPoster()) {
 				ImageLoader il = NetworkManager.getInstance().getImageLoader();

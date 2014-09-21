@@ -1,0 +1,83 @@
+#
+# generated on 2014/09/21 06:29:26
+#
+# --table-start--
+dataClass=the.autarch.tvto_do.model.database.Show
+tableName=shows
+# --table-fields-start--
+# --field-start--
+fieldName=_id
+columnName=_id
+generatedId=true
+# --field-end--
+# --field-start--
+fieldName=title
+columnName=title
+# --field-end--
+# --field-start--
+fieldName=year
+columnName=year
+# --field-end--
+# --field-start--
+fieldName=url
+columnName=url
+# --field-end--
+# --field-start--
+fieldName=country
+columnName=country
+# --field-end--
+# --field-start--
+fieldName=overview
+columnName=overview
+# --field-end--
+# --field-start--
+fieldName=imdbId
+columnName=imdb_id
+# --field-end--
+# --field-start--
+fieldName=tvdbId
+columnName=tvdb_id
+# --field-end--
+# --field-start--
+fieldName=tvrageId
+columnName=tvrage_id
+unique=true
+# --field-end--
+# --field-start--
+fieldName=poster138Url
+columnName=poster_138_url
+# --field-end--
+# --field-start--
+fieldName=poster300Url
+columnName=poster_300_url
+# --field-end--
+# --field-start--
+fieldName=poster138filepath
+columnName=poster_138_filepath
+# --field-end--
+# --field-start--
+fieldName=poster300filepath
+columnName=poster_300_filepath
+# --field-end--
+# --field-start--
+fieldName=extendedInfoStatus
+columnName=extended_info_status
+persisterClass=the.autarch.tvto_do.model.database.ExtendedInfoStatusPersister
+# --field-end--
+# --field-start--
+fieldName=nextEpisodeTitle
+columnName=next_episode_title
+# --field-end--
+# --field-start--
+fieldName=nextEpisodeTime
+columnName=next_episode_time
+persisterClass=the.autarch.tvto_do.model.database.TimePersister
+# --field-end--
+# --field-start--
+fieldName=extendedInfoLastUpdate
+columnName=extended_info_last_update
+persisterClass=the.autarch.tvto_do.model.database.DatePersister
+# --field-end--
+# --table-fields-end--
+# --table-end--
+#################################

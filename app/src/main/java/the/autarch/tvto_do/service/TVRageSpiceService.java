@@ -13,7 +13,7 @@ import retrofit.converter.ConversionException;
 import retrofit.converter.Converter;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
-import the.autarch.tvto_do.model.ExtendedInfoGson;
+import the.autarch.tvto_do.model.gson.ExtendedInfoGson;
 import the.autarch.tvto_do.network.TvRageRest;
 
 /**

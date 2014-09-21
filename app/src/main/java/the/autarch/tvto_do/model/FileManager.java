@@ -14,6 +14,8 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import the.autarch.tvto_do.model.database.Show;
+
 public class FileManager {
 	
 	private static FileManager _instance = null;

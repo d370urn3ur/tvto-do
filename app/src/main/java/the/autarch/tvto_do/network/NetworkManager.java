@@ -1,7 +1,5 @@
 package the.autarch.tvto_do.network;
 
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
@@ -19,8 +17,7 @@ import java.util.HashMap;
 
 import the.autarch.tvto_do.TVTDApplication;
 import the.autarch.tvto_do.model.FileManager;
-import the.autarch.tvto_do.model.Show;
-import the.autarch.tvto_do.model.ShowContract;
+import the.autarch.tvto_do.model.database.Show;
 import the.autarch.tvto_do.util.TVTDImageCache;
 
 /**

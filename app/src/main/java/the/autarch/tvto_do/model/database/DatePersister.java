@@ -1,6 +1,4 @@
-package the.autarch.tvto_do.model;
-
-import android.text.format.Time;
+package the.autarch.tvto_do.model.database;
 
 import com.j256.ormlite.field.FieldType;
 import com.j256.ormlite.field.SqlType;
@@ -8,20 +6,21 @@ import com.j256.ormlite.field.types.BaseDataType;
 import com.j256.ormlite.support.DatabaseResults;
 
 import java.sql.SQLException;
+import java.util.Date;
 
 /**
- * Created by jpierce on 9/13/14.
+ * Created by jpierce on 9/21/14.
  */
-public class TimePersister extends BaseDataType {
+public class DatePersister extends BaseDataType {
 
-    private static final TimePersister instance = new TimePersister();
+    private static final DatePersister instance = new DatePersister();
 
-    public static TimePersister getSingleton() {
+    public static DatePersister getSingleton() {
         return instance;
     }
 
-    private TimePersister() {
-        super(SqlType.LONG, new Class<?>[] { Time.class });
+    private DatePersister() {
+        super(SqlType.LONG, new Class<?>[] { Date.class });
     }
 
     @Override
@@ -29,7 +28,8 @@ public class TimePersister extends BaseDataType {
         if (javaObject == null) {
             return null;
         } else {
-            return ((Time) javaObject).toMillis(false);
+            long millis = ((Date)javaObject).getTime();
+            return Long.valueOf(millis);
         }
     }
 
@@ -49,9 +49,7 @@ public class TimePersister extends BaseDataType {
         if (millis == null) {
             return null;
         } else {
-            Time t = new Time();
-            t.set(millis);
-            return t;
+            return new Date(millis);
         }
     }
 }

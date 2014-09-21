@@ -1,4 +1,4 @@
-package the.autarch.tvto_do.model;
+package the.autarch.tvto_do.model.database;
 
 import android.text.format.Time;
 
@@ -10,18 +10,18 @@ import com.j256.ormlite.support.DatabaseResults;
 import java.sql.SQLException;
 
 /**
- * Created by jpierce on 9/20/14.
+ * Created by jpierce on 9/13/14.
  */
-public class ExtendedInfoStatusPersister extends BaseDataType {
+public class TimePersister extends BaseDataType {
 
-    private static final ExtendedInfoStatusPersister instance = new ExtendedInfoStatusPersister();
+    private static final TimePersister instance = new TimePersister();
 
-    public static ExtendedInfoStatusPersister getSingleton() {
+    public static TimePersister getSingleton() {
         return instance;
     }
 
-    private ExtendedInfoStatusPersister() {
-        super(SqlType.INTEGER, new Class<?>[] { Show.ExtendedInfoStatus.class });
+    private TimePersister() {
+        super(SqlType.LONG, new Class<?>[] { Time.class });
     }
 
     @Override
@@ -29,27 +29,29 @@ public class ExtendedInfoStatusPersister extends BaseDataType {
         if (javaObject == null) {
             return null;
         } else {
-            return ((Show.ExtendedInfoStatus) javaObject).getValue();
+            return ((Time) javaObject).toMillis(false);
         }
     }
 
     @Override
     public Object resultToSqlArg(FieldType fieldType, DatabaseResults results, int columnPos) throws SQLException {
-        return results.getInt(columnPos);
+        return results.getLong(columnPos);
     }
 
     @Override
     public Object parseDefaultString(FieldType fieldType, String defaultStr) throws SQLException {
-        return Integer.parseInt(defaultStr);
+        return Long.parseLong(defaultStr);
     }
 
     @Override
     public Object sqlArgToJava(FieldType fieldType, Object sqlArg, int columnPos) throws SQLException {
-        Integer value = (Integer)sqlArg;
-        if (value == null) {
+        Long millis = (Long)sqlArg;
+        if (millis == null) {
             return null;
         } else {
-            return Show.ExtendedInfoStatus.fromValue(value.byteValue());
+            Time t = new Time();
+            t.set(millis);
+            return t;
         }
     }
 }

@@ -1,15 +1,10 @@
 package the.autarch.tvto_do.fragment;
 
-import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.view.ActionMode;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -21,8 +16,6 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import com.octo.android.robospice.persistence.DurationInMillis;
-import com.octo.android.robospice.persistence.exception.SpiceException;
-import com.octo.android.robospice.request.listener.RequestListener;
 
 import java.util.List;
 
@@ -31,14 +24,11 @@ import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.TVTDApplication;
 import the.autarch.tvto_do.activity.ShowsListActivity;
 import the.autarch.tvto_do.adapter.ShowAdapter;
-import the.autarch.tvto_do.event.UpdateExtendedInfoEvent;
+import the.autarch.tvto_do.event.ShowCreatedEvent;
 import the.autarch.tvto_do.loader.ShowLoader;
-import the.autarch.tvto_do.model.ExtendedInfoGson;
-import the.autarch.tvto_do.model.FileManager;
-import the.autarch.tvto_do.model.Model;
-import the.autarch.tvto_do.model.Show;
+import the.autarch.tvto_do.model.database.Show;
 import the.autarch.tvto_do.network.ExtendedInfoRequest;
-import the.autarch.tvto_do.model.ShowContract;
+import the.autarch.tvto_do.network.ExtendedInfoRequestListener;
 
 public class ShowsListFragment extends BaseSpiceFragment implements LoaderManager.LoaderCallbacks<List<Show>>, ActionMode.Callback {
 	
@@ -170,46 +160,16 @@ public class ShowsListFragment extends BaseSpiceFragment implements LoaderManage
         TVTDApplication.model().getShowDao().deleteInBackground(show);
 	}
 
-    public void onEventMainThread(UpdateExtendedInfoEvent ev) {
-        Show s = ev.getShow();
-        refreshShowExtendedInfo(s);
+    public void onEventMainThread(ShowCreatedEvent event) {
+        Show show = event.getShow();
+        if(show.getExtendedInfoStatus() == Show.ExtendedInfoStatus.EXTENDED_INFO_UNKNOWN) {
+            refreshShowExtendedInfo(event.getShow());
+        }
     }
-	
+
 	private void refreshShowExtendedInfo(Show show) {
         ExtendedInfoRequest req = new ExtendedInfoRequest(show.getTvrageId());
         String cacheKey = req.createCacheKey();
-        getRageManager().execute(req, cacheKey, DurationInMillis.ONE_MINUTE, new ExtendedInfoRequestListener());
+        getRageManager().execute(req, cacheKey, DurationInMillis.ONE_MINUTE, new ExtendedInfoRequestListener(show));
 	}
-
-    class ExtendedInfoRequestListener implements RequestListener<ExtendedInfoGson> {
-
-        @Override
-        public void onRequestFailure(SpiceException spiceException) {
-            Log.e(getClass().getSimpleName(), "got error in extended info request: " + spiceException);
-        }
-
-        @Override
-        public void onRequestSuccess(ExtendedInfoGson extendedInfoWrapper) {
-
-            // TODO: build update query for show
-
-//            ContentValues cvs = new ContentValues();
-//
-//            if(extendedInfoWrapper.hasInfo()) {
-//                cvs.put(ShowContract.ShowColumns.NEXT_EPISODE_TITLE, extendedInfoWrapper.nextEpisodeTitle);
-//                cvs.put(ShowContract.ShowColumns.NEXT_EPISODE_TIME, extendedInfoWrapper.nextEpisodeTime.toMillis(false));
-//            }
-//
-//            cvs.put(ShowContract.ShowColumns.EXTENDED_INFO_UPDATED, true);
-//
-//            ContentResolver cr = getActivity().getContentResolver();
-//            cr.update(
-//                    ShowContract.ShowColumns.CONTENT_URI,
-//                    cvs,
-//                    ShowContract.ShowColumns.TVRAGE_ID + "= ?",
-//                    new String[] { extendedInfoWrapper.tvRageId }
-//            );
-        }
-    }
-
 }
