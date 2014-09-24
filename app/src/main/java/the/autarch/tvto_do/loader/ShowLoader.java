@@ -24,7 +24,7 @@ import the.autarch.tvto_do.model.database.ShowDao;
  */
 public class ShowLoader extends AsyncTaskLoader<List<Show>> {
 
-    private List<Show> _data = new ArrayList<Show>();
+    private List<Show> _data;
 
     public ShowLoader(Context context) {
         super(context);
@@ -36,6 +36,10 @@ public class ShowLoader extends AsyncTaskLoader<List<Show>> {
         List<Show> data = new ArrayList<Show>();
         try {
             ShowDao dao = TVTDApplication.model().getShowDao();
+
+            if(dao == null) {
+                return null;
+            }
 
             QueryBuilder<Show, Integer> qb = dao.queryBuilder();
             qb.orderBy(Show.ShowColumns.DEFAULT_SORT_ORDER, Show.ShowColumns.DEFAULT_SORT_ASCENDING);

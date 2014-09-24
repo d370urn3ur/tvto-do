@@ -149,6 +149,8 @@ public class ShowsListFragment extends BaseSpiceFragment implements LoaderManage
 	@Override
 	public void onDestroyActionMode(ActionMode arg0) {
 		_actionMode = null;
+        _showAdapter.expandPosition(-1);
+        updateVisibleCells();
 	}
 
 	@Override

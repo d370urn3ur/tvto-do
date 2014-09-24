@@ -149,8 +149,6 @@ public class ShowsListActivity extends BaseSpiceActivity {
 	private void hideSearch() {
 		_isSearching = false;
         getSupportFragmentManager().popBackStack();
-//		Fragment searchFrag = getSupportFragmentManager().findFragmentById(R.id.shows_search_fragment);
-//		getSupportFragmentManager().beginTransaction().hide(searchFrag).commit();
 	}
 	
 	private void showSearch() {
@@ -161,9 +159,6 @@ public class ShowsListActivity extends BaseSpiceActivity {
                 .add(R.id.fragment_container, searchFrag, searchFrag.getClass().getName())
                 .addToBackStack(null)
                 .commit();
-
-//		Fragment searchFrag = getSupportFragmentManager().findFragmentById(R.id.shows_search_fragment);
-//		getSupportFragmentManager().beginTransaction().show(searchFrag).addToBackStack(null).commit();
 	}
 
     private void searchForText(String query) {

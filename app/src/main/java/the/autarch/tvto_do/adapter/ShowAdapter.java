@@ -103,7 +103,9 @@ public class ShowAdapter extends BaseAdapter {
     public void swapData(List<Show> data) {
         _expandedPosition = -1;
         _data.clear();
-        _data.addAll(data);
+        if(data != null) {
+            _data.addAll(data);
+        }
         notifyDataSetChanged();
     }
 

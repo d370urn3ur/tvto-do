@@ -43,6 +43,10 @@ public class Model {
     }
 
     public ShowDao getShowDao() {
+        if(_dbHelper == null) {
+            return null;
+        }
+
         try {
             return _dbHelper.getShowDao();
         } catch(SQLException e) {

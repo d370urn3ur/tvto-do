@@ -125,6 +125,8 @@ public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode
 	@Override
 	public void onDestroyActionMode(ActionMode mode) {
 		_actionMode = null;
+        _searchAdapter.toggleExpandedCell(-1);
+        updateVisibleCells();
 	}
 
 	@Override
