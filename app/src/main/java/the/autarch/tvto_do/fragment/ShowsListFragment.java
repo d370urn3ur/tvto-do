@@ -1,6 +1,7 @@
 package the.autarch.tvto_do.fragment;
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBarActivity;
@@ -11,14 +12,15 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import com.octo.android.robospice.persistence.DurationInMillis;
 
 import java.util.List;
 
+import butterknife.ButterKnife;
+import butterknife.InjectView;
+import butterknife.OnItemClick;
 import de.greenrobot.event.EventBus;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.TVTDApplication;
@@ -35,6 +37,9 @@ public class ShowsListFragment extends BaseSpiceFragment implements LoaderManage
 	private ShowAdapter _showAdapter;
 	private ActionMode _actionMode;
 
+    @InjectView(android.R.id.list) ListView _listView;
+    @InjectView(android.R.id.empty) View _emptyView;
+
     @Override
     public void onStart() {
         super.onStart();
@@ -49,41 +54,25 @@ public class ShowsListFragment extends BaseSpiceFragment implements LoaderManage
 
     @Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		return inflater.inflate(R.layout.fragment_shows_list, container, false);
+        View v = inflater.inflate(R.layout.fragment_shows_list, container, false);
+        ButterKnife.inject(this, v);
+		return v;
 	}
-	
-	@Override
-	public void onActivityCreated(Bundle savedInstanceState) {
 
-        super.onActivityCreated(savedInstanceState);
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        ButterKnife.reset(this);
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 		
 		_showAdapter = new ShowAdapter(getActivity());
-		ListView lv = (ListView)getView().findViewById(android.R.id.list);
-		lv.setAdapter(_showAdapter);
-		lv.setEmptyView(getView().findViewById(android.R.id.empty));
-		lv.setOnItemClickListener(new OnItemClickListener() {
 
-			@Override
-			public void onItemClick(AdapterView<?> parent, View cell, int position, long id) {
-				_showAdapter.expandPosition(position);
-				updateVisibleCells();
-
-                if(_actionMode != null) {
-                    int selectedPos = (Integer)_actionMode.getTag();
-                    if(selectedPos == position) {
-                        _actionMode.finish();
-                        _actionMode = null;
-                    } else {
-                        _actionMode.setTag(position);
-                    }
-                    return;
-                }
-
-                // Start the CAB using the ActionMode.Callback defined above
-                _actionMode = ((ActionBarActivity)getActivity()).startSupportActionMode(ShowsListFragment.this);
-                _actionMode.setTag(position);
-			}
-		});
+		_listView.setAdapter(_showAdapter);
+		_listView.setEmptyView(_emptyView);
 
         getLoaderManager().initLoader(ShowsListActivity.LOADER_ID_SHOW, null, this);
 	}
@@ -92,6 +81,27 @@ public class ShowsListFragment extends BaseSpiceFragment implements LoaderManage
     public void onResume() {
         super.onResume();
         updateVisibleCells();
+    }
+
+    @OnItemClick(android.R.id.list)
+    public void onItemSelected(int position) {
+        _showAdapter.expandPosition(position);
+        updateVisibleCells();
+
+        if(_actionMode != null) {
+            int selectedPos = (Integer)_actionMode.getTag();
+            if(selectedPos == position) {
+                _actionMode.finish();
+                _actionMode = null;
+            } else {
+                _actionMode.setTag(position);
+            }
+            return;
+        }
+
+        // Start the CAB using the ActionMode.Callback defined above
+        _actionMode = ((ActionBarActivity)getActivity()).startSupportActionMode(ShowsListFragment.this);
+        _actionMode.setTag(position);
     }
 	
 	private void updateVisibleCells() {

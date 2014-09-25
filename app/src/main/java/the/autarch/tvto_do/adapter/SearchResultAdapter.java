@@ -1,11 +1,5 @@
 package the.autarch.tvto_do.adapter;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
-import the.autarch.tvto_do.R;
-import the.autarch.tvto_do.model.gson.SearchResultGson;
-import the.autarch.tvto_do.network.NetworkManager;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,25 +10,33 @@ import android.widget.TextView;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
 
+import java.util.List;
+
+import butterknife.ButterKnife;
+import butterknife.InjectView;
+import the.autarch.tvto_do.R;
+import the.autarch.tvto_do.model.gson.SearchResultGson;
+import the.autarch.tvto_do.network.NetworkManager;
+
 public class SearchResultAdapter extends ArrayAdapter<SearchResultGson> {
 
 	private int _layoutRes;
     private int _expandedPosition = -1;
+    LayoutInflater _inflater;
 	
 	public SearchResultAdapter(Context context, int resource) {
 		super(context, resource);
 		_layoutRes = resource;
+        _inflater = LayoutInflater.from(context);
 	}
 	
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
-		
-		View v = convertView;
-		if(v == null) {
-			LayoutInflater inflater = LayoutInflater.from(getContext());
-			v = inflater.inflate(_layoutRes, parent, false);
-			SearchResultCellHolder holder = new SearchResultCellHolder(v);
-			v.setTag(holder);
+
+		if(convertView == null) {
+			convertView = _inflater.inflate(_layoutRes, parent, false);
+			SearchResultCellHolder holder = new SearchResultCellHolder(convertView);
+			convertView.setTag(holder);
 		}
 		
 		SearchResultGson searchResult = getItem(position);
@@ -43,34 +45,33 @@ public class SearchResultAdapter extends ArrayAdapter<SearchResultGson> {
 		
 		// set background color
         if(expanded) {
-            v.setBackgroundColor(getContext().getResources().getColor(R.color.holo_blue_bright));
+            convertView.setBackgroundColor(getContext().getResources().getColor(R.color.holo_blue_bright));
         } else {
             int mod = position % 2;
             int colorRef = (mod == 0) ? R.color.holo_gray_bright : R.color.holo_gray_light;
-            v.setBackgroundColor(getContext().getResources().getColor(colorRef));
+            convertView.setBackgroundColor(getContext().getResources().getColor(colorRef));
         }
 		
-		SearchResultCellHolder holder = (SearchResultCellHolder)v.getTag();
+		SearchResultCellHolder holder = (SearchResultCellHolder)convertView.getTag();
 		holder.loadSearchResult(searchResult, expanded);
-		return v;
+
+		return convertView;
 	}
 	
-	public void supportAddAll(Collection<SearchResultGson> data) {
-		for(SearchResultGson s : data) {
-			add(s);
-		}
-	}
-	
-	public void empty() {
-		ArrayList<SearchResultGson> items = new ArrayList<SearchResultGson>();
-		for(int i=0; i < getCount(); ++i) {
-			items.add(getItem(i));
-		}
-		for(SearchResultGson s : items) {
-			remove(s);
-		}
-		_expandedPosition = -1;
-	}
+	public void swapData(List<SearchResultGson> data) {
+        setNotifyOnChange(false);
+        clear();
+        for(SearchResultGson sr : data) {
+            add(sr);
+        }
+        notifyDataSetChanged();
+    }
+
+    @Override
+    public void clear() {
+        _expandedPosition = -1;
+        super.clear();
+    }
 	
 	public void toggleExpandedCell(int position) {
         if(_expandedPosition == position) {
@@ -81,21 +82,19 @@ public class SearchResultAdapter extends ArrayAdapter<SearchResultGson> {
 	}
 	
 	class SearchResultCellHolder {
-		private NetworkImageView _iv;
-		private TextView _title;
-		private TextView _status;
-		private TextView _year;
-		private TextView _overview;
+
+		@InjectView(R.id.search_cell_image) NetworkImageView _iv;
+		@InjectView(R.id.search_cell_title) TextView _title;
+		@InjectView(R.id.search_cell_status) TextView _status;
+		@InjectView(R.id.search_cell_year) TextView _year;
+		@InjectView(R.id.search_cell_overview) TextView _overview;
 		
 		SearchResultCellHolder(View root) {
-			_iv = (NetworkImageView)root.findViewById(R.id.search_cell_image);
+
+            ButterKnife.inject(this, root);
+
 			_iv.setDefaultImageResId(R.drawable.poster_dark);
 			_iv.setErrorImageResId(R.drawable.poster_dark);
-			
-			_title = (TextView)root.findViewById(R.id.search_cell_title);
-			_status = (TextView)root.findViewById(R.id.search_cell_status);
-			_year = (TextView)root.findViewById(R.id.search_cell_year);
-			_overview = (TextView)root.findViewById(R.id.search_cell_overview);
 		}
 		
 		void loadSearchResult(final SearchResultGson searchResult, boolean expanded) {

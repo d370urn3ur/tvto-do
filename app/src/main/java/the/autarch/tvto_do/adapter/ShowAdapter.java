@@ -15,6 +15,8 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.ButterKnife;
+import butterknife.InjectView;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.model.FileManager;
 import the.autarch.tvto_do.model.database.Show;
@@ -51,6 +53,7 @@ public class ShowAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+
         if(convertView == null) {
             convertView = _inflater.inflate(R.layout.show_cell, parent, false);
             ShowCellHolder h = new ShowCellHolder(convertView);
@@ -111,20 +114,16 @@ public class ShowAdapter extends BaseAdapter {
 
     class ShowCellHolder {
 		
-		private ImageView _iv;
-		private TextView _title;
-		private TextView _nextTitle;
-		private TextView _nextDate;
-		private TextView _overview;
+		@InjectView(R.id.show_cell_image) ImageView _iv;
+		@InjectView(R.id.show_cell_title) TextView _title;
+		@InjectView(R.id.show_cell_next_title) TextView _nextTitle;
+		@InjectView(R.id.show_cell_next_date) TextView _nextDate;
+		@InjectView(R.id.show_cell_overview) TextView _overview;
 
         private int dateFormatFlags = DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_NUMERIC_DATE;
 		
 		ShowCellHolder(View root) {
-			_iv = (ImageView)root.findViewById(R.id.show_cell_image);
-			_title = (TextView)root.findViewById(R.id.show_cell_title);
-			_nextTitle = (TextView)root.findViewById(R.id.show_cell_next_title);
-			_nextDate = (TextView)root.findViewById(R.id.show_cell_next_date);
-			_overview = (TextView)root.findViewById(R.id.show_cell_overview);
+            ButterKnife.inject(this, root);
 		}
 		
 		void populateWithShowAtPosition(Show show, int position) {

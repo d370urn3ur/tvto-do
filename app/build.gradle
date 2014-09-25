@@ -39,4 +39,7 @@ dependencies {
 
     // EventBus
     compile 'de.greenrobot:eventbus:2.2.1'
+
+    // ButterKnife
+    compile 'com.jakewharton:butterknife:5.1.2'
 }

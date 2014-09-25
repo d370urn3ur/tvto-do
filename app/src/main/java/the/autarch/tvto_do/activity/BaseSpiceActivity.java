@@ -4,6 +4,7 @@ import android.support.v7.app.ActionBarActivity;
 
 import com.octo.android.robospice.SpiceManager;
 
+import de.greenrobot.event.EventBus;
 import the.autarch.tvto_do.fragment.BaseSpiceFragment;
 import the.autarch.tvto_do.service.TVRageSpiceService;
 import the.autarch.tvto_do.service.TraktSpiceService;
@@ -21,6 +22,7 @@ public class BaseSpiceActivity extends ActionBarActivity implements BaseSpiceFra
         super.onStart();
         _traktManager.start(this);
         _rageManager.start(this);
+        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -28,6 +30,7 @@ public class BaseSpiceActivity extends ActionBarActivity implements BaseSpiceFra
         super.onStop();
         _traktManager.shouldStop();
         _rageManager.shouldStop();
+        EventBus.getDefault().unregister(this);
     }
 
     protected SpiceManager getTraktManager() {

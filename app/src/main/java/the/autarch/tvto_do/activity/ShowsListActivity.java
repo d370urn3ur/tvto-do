@@ -40,7 +40,6 @@ import the.autarch.tvto_do.network.SearchRequest;
 public class ShowsListActivity extends BaseSpiceActivity {
 
 	public static final int LOADER_ID_SHOW = 1;
-	private boolean _isSearching = false;
     private static final int SEARCH_QUERY_THRESHOLD_MILLIS = 2 * 1000;
 
     private Handler _searchDelayedHandler = new Handler() {
@@ -59,18 +58,6 @@ public class ShowsListActivity extends BaseSpiceActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_shows_list);
 	}
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        EventBus.getDefault().register(this);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        EventBus.getDefault().unregister(this);
-    }
 
     @Override
     protected void onPause() {
@@ -126,10 +113,11 @@ public class ShowsListActivity extends BaseSpiceActivity {
 			}
 	    });
 
-	    // When using the support library, the setOnActionExpandListener() method is
-	    // static and accepts the MenuItem object as an argument
 	    MenuItemCompat.setOnActionExpandListener(searchItem, new OnActionExpandListener() {
-	    	
+
+            // When using the support library, the setOnActionExpandListener() method is
+            // static and accepts the MenuItem object as an argument
+
 	        @Override
 	        public boolean onMenuItemActionCollapse(MenuItem item) {
 	        	hideSearch();
@@ -147,18 +135,22 @@ public class ShowsListActivity extends BaseSpiceActivity {
 	}
 	
 	private void hideSearch() {
-		_isSearching = false;
-        getSupportFragmentManager().popBackStack();
+        Fragment searchFrag = getSupportFragmentManager().findFragmentByTag(ShowsSearchFragment.class.getName());
+        if(searchFrag != null) {
+            getSupportFragmentManager().popBackStack();
+        }
 	}
 	
 	private void showSearch() {
-		_isSearching = true;
-        Fragment searchFrag = Fragment.instantiate(this, ShowsSearchFragment.class.getName());
-        getSupportFragmentManager()
-                .beginTransaction()
-                .add(R.id.fragment_container, searchFrag, searchFrag.getClass().getName())
-                .addToBackStack(null)
-                .commit();
+        Fragment searchFrag = getSupportFragmentManager().findFragmentByTag(ShowsSearchFragment.class.getName());
+        if(searchFrag == null) {
+            searchFrag = Fragment.instantiate(this, ShowsSearchFragment.class.getName());
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.fragment_container, searchFrag, searchFrag.getClass().getName())
+                    .addToBackStack(null)
+                    .commit();
+        }
 	}
 
     private void searchForText(String query) {
