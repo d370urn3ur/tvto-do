@@ -42,6 +42,11 @@ public class ShowsListActivity extends BaseSpiceActivity {
 	public static final int LOADER_ID_SHOW = 1;
     private static final int SEARCH_QUERY_THRESHOLD_MILLIS = 2 * 1000;
 
+    private static final String STATE_KEY_QUERY = "ShowsSearchFragment.state_key_query";
+
+    private MenuItem _searchItem;
+    private String _lastQuery;
+
     private Handler _searchDelayedHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -57,7 +62,20 @@ public class ShowsListActivity extends BaseSpiceActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_shows_list);
+
+        if(savedInstanceState != null) {
+            _lastQuery = savedInstanceState.getString(STATE_KEY_QUERY);
+            if(!TextUtils.isEmpty(_lastQuery)) {
+                searchForText(_lastQuery);
+            }
+        }
 	}
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(STATE_KEY_QUERY, _lastQuery);
+    }
 
     @Override
     protected void onPause() {
@@ -73,8 +91,8 @@ public class ShowsListActivity extends BaseSpiceActivity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.shows_list, menu);
 		
-		MenuItem searchItem = (MenuItem)menu.findItem(R.id.action_search);
-	    SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+		_searchItem = (MenuItem)menu.findItem(R.id.action_search);
+	    SearchView searchView = (SearchView) MenuItemCompat.getActionView(_searchItem);
 	    searchView.setOnQueryTextListener(new OnQueryTextListener() {
 
 			@Override
@@ -113,7 +131,7 @@ public class ShowsListActivity extends BaseSpiceActivity {
 			}
 	    });
 
-	    MenuItemCompat.setOnActionExpandListener(searchItem, new OnActionExpandListener() {
+	    MenuItemCompat.setOnActionExpandListener(_searchItem, new OnActionExpandListener() {
 
             // When using the support library, the setOnActionExpandListener() method is
             // static and accepts the MenuItem object as an argument
@@ -135,6 +153,7 @@ public class ShowsListActivity extends BaseSpiceActivity {
 	}
 	
 	private void hideSearch() {
+        _lastQuery = null;
         Fragment searchFrag = getSupportFragmentManager().findFragmentByTag(ShowsSearchFragment.class.getName());
         if(searchFrag != null) {
             getSupportFragmentManager().popBackStack();
@@ -156,6 +175,7 @@ public class ShowsListActivity extends BaseSpiceActivity {
     private void searchForText(String query) {
         ShowsSearchFragment searchFrag = (ShowsSearchFragment)getSupportFragmentManager().findFragmentByTag(ShowsSearchFragment.class.getName());
         if(searchFrag != null) {
+            _lastQuery = query;
             searchFrag.searchForText(query);
         }
     }
