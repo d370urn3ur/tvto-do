@@ -148,6 +148,11 @@ public class ShowsListActivity extends BaseSpiceActivity {
 	            return true;  // Return true to expand action view
 	        }
 	    });
+
+        if(!TextUtils.isEmpty(_lastQuery)) {
+            MenuItemCompat.expandActionView(_searchItem);
+            searchView.setQuery(_lastQuery, false);
+        }
 	    
 	    return super.onCreateOptionsMenu(menu);
 	}
