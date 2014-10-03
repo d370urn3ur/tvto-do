@@ -3,9 +3,9 @@ tvto-do
 
 To-do list for TV shows
 
-USE: Search for a TV show, add it to the list.  When you are done watching it, delete it.
+<b>USE:</b> Search for a TV show, add it to the list.  When you are done watching it, delete it.
 
-Uses TRAKT and TVRage APIs for TV information.
+Uses <a href="https://trakt.tv/api-docs">TRAKT</a> and <a href="http://services.tvrage.com">TVRage</a> APIs for TV information.
 
 Demonstrates several awesome libraries for Android:
 
