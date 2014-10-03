@@ -1,4 +1,4 @@
-tvto-do
+<b>TV To-do</b>
 =======
 
 To-do list for TV shows
