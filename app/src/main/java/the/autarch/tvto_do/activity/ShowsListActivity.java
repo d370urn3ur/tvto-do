@@ -1,6 +1,5 @@
 package the.autarch.tvto_do.activity;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -10,32 +9,23 @@ import android.support.v4.view.MenuItemCompat.OnActionExpandListener;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.SearchView.OnQueryTextListener;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
-import com.j256.ormlite.stmt.PreparedQuery;
-import com.j256.ormlite.stmt.QueryBuilder;
 import com.octo.android.robospice.persistence.DurationInMillis;
 
-import java.sql.SQLException;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import de.greenrobot.event.EventBus;
 import the.autarch.tvto_do.R;
-import the.autarch.tvto_do.TVTDApplication;
-import the.autarch.tvto_do.event.DatabaseInitializedEvent;
+import the.autarch.tvto_do.event.NetworkEvent;
 import the.autarch.tvto_do.event.UpdateExpiredExtendedInfoEvent;
 import the.autarch.tvto_do.fragment.ShowsSearchFragment;
 import the.autarch.tvto_do.model.database.Show;
-import the.autarch.tvto_do.model.gson.SearchResultGson;
 import the.autarch.tvto_do.network.ExtendedInfoRequest;
 import the.autarch.tvto_do.network.ExtendedInfoRequestListener;
-import the.autarch.tvto_do.network.SearchRequest;
 
 public class ShowsListActivity extends BaseSpiceActivity {
 
@@ -65,9 +55,9 @@ public class ShowsListActivity extends BaseSpiceActivity {
 
         if(savedInstanceState != null) {
             _lastQuery = savedInstanceState.getString(STATE_KEY_QUERY);
-            if(!TextUtils.isEmpty(_lastQuery)) {
-                searchForText(_lastQuery);
-            }
+//            if(!TextUtils.isEmpty(_lastQuery)) {
+//                searchForText(_lastQuery);
+//            }
         }
 	}
 
@@ -192,5 +182,10 @@ public class ShowsListActivity extends BaseSpiceActivity {
             String cacheKey = req.createCacheKey();
             getTvRageManager().execute(req, cacheKey, DurationInMillis.ONE_MINUTE, new ExtendedInfoRequestListener(s));
         }
+    }
+
+    public void onEventMainThread(NetworkEvent ev) {
+        int length = ev.isSuccess() ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG;
+        Toast.makeText(this, ev.getMessage(), length).show();
     }
 }

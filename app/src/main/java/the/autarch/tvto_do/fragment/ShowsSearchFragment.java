@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.octo.android.robospice.persistence.DurationInMillis;
 import com.octo.android.robospice.persistence.exception.SpiceException;
@@ -95,7 +96,26 @@ public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode
         SearchRequest req = new SearchRequest(searchText);
         String cacheKey = req.createCacheKey();
 
-        getTraktManager().cancel(SearchResultGson.class, cacheKey);
+        getTraktManager().cancel(req.getResultType(), cacheKey);
+
+//        try {
+//
+//            Future<Boolean> isInCache = getTraktManager().isDataInCache(req.getResultType(), cacheKey, DurationInMillis.ONE_MINUTE);
+//            if(isInCache != null && isInCache.get()) {
+//                List<SearchResultGson> results = getTraktManager().getDataFromCache(SearchResultGson.List.class, cacheKey).get();
+//                _searchAdapter.swapData(results);
+//                return;
+//            }
+//
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        } catch (ExecutionException e) {
+//            e.printStackTrace();
+//        } catch (CacheCreationException e) {
+//            e.printStackTrace();
+//        } catch (CacheLoadingException e) {
+//            e.printStackTrace();
+//        }
 
         getTraktManager().execute(req, cacheKey, DurationInMillis.ONE_MINUTE, new ListSearchRequestListener());
 	}
@@ -119,6 +139,7 @@ public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode
         @Override
         public void onRequestFailure(SpiceException spiceException) {
             _searchAdapter.clear();
+            Toast.makeText(getActivity(), spiceException.getMessage(), Toast.LENGTH_LONG).show();
         }
 
         @Override
