@@ -9,21 +9,19 @@ Uses TRAKT and TVRage APIs for TV information.
 
 Demonstrates several awesome libraries for Android:
 
-RoboSpice (w/ extensions Retrofit & ORMLite)
-https://github.com/stephanenicolas/robospice
+<a href="https://github.com/stephanenicolas/robospice">RoboSpice (w/ extensions Retrofit & ORMLite)</a>
 
-Butter Knife
-http://jakewharton.github.io/butterknife/
+<a href="http://jakewharton.github.io/butterknife">Butter Knife</a>
 
-EventBus
-https://github.com/greenrobot/EventBus
+<a href="https://github.com/greenrobot/EventBus">EventBus</a>
 
-Gson
-https://code.google.com/p/google-gson/
+<a href="https://code.google.com/p/google-gson">Gson</a>
 
-TODO:
-Integrate RxJava
-Add some awesome animations
-Optimize searching
-...
-profit??
+<b>TODO:</b>
+<ul>
+<li>Integrate RxJava</li>
+<li>Add some awesome animations</li>
+<li>Optimize searching</li>
+<li>...</li>
+<li>profit??</li>
+</ul>
