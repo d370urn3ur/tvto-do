@@ -42,4 +42,8 @@ dependencies {
 
     // ButterKnife
     compile 'com.jakewharton:butterknife:5.1.2'
+
+    // RxJava
+    compile 'com.netflix.rxjava:rxjava-android:0.20.5'
+
 }
