@@ -1,8 +1,6 @@
 package the.autarch.tvto_do.activity;
 
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.MenuItemCompat.OnActionExpandListener;
@@ -16,9 +14,17 @@ import android.widget.Toast;
 import com.octo.android.robospice.persistence.DurationInMillis;
 
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
+import roboguice.util.temp.Ln;
+import rx.Observable;
+import rx.Observer;
+import rx.Subscriber;
+import rx.Subscription;
+import rx.android.observables.AndroidObservable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
+import rx.subjects.PublishSubject;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.event.NetworkEvent;
 import the.autarch.tvto_do.event.UpdateExpiredExtendedInfoEvent;
@@ -30,23 +36,14 @@ import the.autarch.tvto_do.network.ExtendedInfoRequestListener;
 public class ShowsListActivity extends BaseSpiceActivity {
 
 	public static final int LOADER_ID_SHOW = 1;
-    private static final int SEARCH_QUERY_THRESHOLD_MILLIS = 2 * 1000;
 
     private static final String STATE_KEY_QUERY = "ShowsSearchFragment.state_key_query";
 
     private MenuItem _searchItem;
     private String _lastQuery;
 
-    private Handler _searchDelayedHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            _searchTimer.cancel();
-            _searchTimer = null;
-            searchForText((String)msg.obj);
-        }
-    };
-    private Timer _searchTimer;
+    private Subscription _subscription;
+    private PublishSubject<Observable<String>> _searchTextEmitterSubject;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -56,21 +53,26 @@ public class ShowsListActivity extends BaseSpiceActivity {
         if(savedInstanceState != null) {
             _lastQuery = savedInstanceState.getString(STATE_KEY_QUERY);
         }
+
+        _searchTextEmitterSubject = PublishSubject.create();
+        _subscription = AndroidObservable.bindActivity(this, Observable.switchOnNext(_searchTextEmitterSubject))
+                            .debounce(800, TimeUnit.MILLISECONDS, Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(_getSearchObserver());
 	}
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(_subscription != null) {
+            _subscription.unsubscribe();
+        }
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(STATE_KEY_QUERY, _lastQuery);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if(_searchTimer != null) {
-            _searchTimer.cancel();
-            _searchTimer = null;
-        }
     }
 
 	@Override
@@ -85,35 +87,16 @@ public class ShowsListActivity extends BaseSpiceActivity {
 			@Override
 			public boolean onQueryTextChange(final String searchText) {
 
-                if(_searchTimer != null) {
-                    _searchTimer.cancel();
-                    _searchTimer = null;
-                }
-
-                if(!TextUtils.isEmpty(searchText)) {
-
-                    _searchTimer = new Timer();
-                    _searchTimer.schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            Message m = _searchDelayedHandler.obtainMessage(0, searchText);
-                            _searchDelayedHandler.sendMessage(m);
-                        }
-                    }, SEARCH_QUERY_THRESHOLD_MILLIS);
-                }
-
+//                searchForText(searchText);
+                _searchTextEmitterSubject.onNext(getSearchObservableFor(searchText));
 				return true;
 			}
 
 			@Override
 			public boolean onQueryTextSubmit(String searchText) {
 
-                if(_searchTimer != null) {
-                    _searchTimer.cancel();
-                    _searchTimer = null;
-                }
-
-				searchForText(searchText);
+//				searchForText(searchText);
+                _searchTextEmitterSubject.onNext(getSearchObservableFor(searchText));
 				return true;
 			}
 	    });
@@ -143,8 +126,8 @@ public class ShowsListActivity extends BaseSpiceActivity {
 	    
 	    return super.onCreateOptionsMenu(menu);
 	}
-	
-	private void hideSearch() {
+
+    private void hideSearch() {
         _lastQuery = null;
         Fragment searchFrag = getSupportFragmentManager().findFragmentByTag(ShowsSearchFragment.class.getName());
         if(searchFrag != null) {
@@ -184,5 +167,42 @@ public class ShowsListActivity extends BaseSpiceActivity {
     public void onEventMainThread(NetworkEvent ev) {
         int length = ev.isSuccess() ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG;
         Toast.makeText(this, ev.getMessage(), length).show();
+    }
+
+    // -----------------------------------------------------------------------------------
+    // Main Rx entities
+    private Observer<String> _getSearchObserver() {
+        return new Observer<String>() {
+            @Override
+            public void onCompleted() {
+                Ln.d("--------- onComplete");
+            }
+            @Override
+            public void onError(Throwable e) {
+                Ln.e(e, "--------- Woops on error!");
+            }
+            @Override
+            public void onNext(String searchText) {
+                Ln.d(String.format("onNext You searched for %s", searchText));
+                searchForText(searchText);
+                onCompleted();
+            }
+        };
+    }
+
+    /**
+     * @param searchText search text entered onTextChange
+     * @return a new observable which searches for text searchText, explicitly say you want subscription to be done on a a non-UI thread, otherwise it'll default to the main thread.
+     */
+    private Observable<String> getSearchObservableFor(final String searchText) {
+        return Observable.create(new Observable.OnSubscribe<String>() {
+
+            @Override
+            public void call(Subscriber<? super String> subscriber) {
+                Ln.d("----------- inside the search observable");
+                subscriber.onNext(searchText);
+                // subscriber.onCompleted(); This seems to have no effect.
+            }
+        }).subscribeOn(Schedulers.io());
     }
 }
