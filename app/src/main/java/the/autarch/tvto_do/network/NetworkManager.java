@@ -29,11 +29,8 @@ public class NetworkManager {
 	
 	private static NetworkManager _instance = null;
 
-	private static RequestQueue _requestQueue = null;
-	private static ImageCache _imageCache = null;
 	private static ImageLoader _imageLoader = null;
 
-    private Context _appContext;
 	private HashMap<String, ImageContainer> _imageRequests = new HashMap<String, ImageContainer>();
 	
 	public static void initialize(Context context) {
@@ -48,10 +45,9 @@ public class NetworkManager {
 	}
 	
 	private NetworkManager(Context context) {
-        _appContext = context.getApplicationContext();
-		_requestQueue = Volley.newRequestQueue(context.getApplicationContext());
-		_imageCache = new TVTDImageCache();
-		_imageLoader = new ImageLoader(_requestQueue, _imageCache);
+		RequestQueue requestQueue = Volley.newRequestQueue(context.getApplicationContext());
+		ImageCache imageCache = new TVTDImageCache();
+		_imageLoader = new ImageLoader(requestQueue, imageCache);
 	}
 
 	

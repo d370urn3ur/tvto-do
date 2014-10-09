@@ -98,25 +98,6 @@ public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode
 
         getTraktManager().cancel(req.getResultType(), cacheKey);
 
-//        try {
-//
-//            Future<Boolean> isInCache = getTraktManager().isDataInCache(req.getResultType(), cacheKey, DurationInMillis.ONE_MINUTE);
-//            if(isInCache != null && isInCache.get()) {
-//                List<SearchResultGson> results = getTraktManager().getDataFromCache(SearchResultGson.List.class, cacheKey).get();
-//                _searchAdapter.swapData(results);
-//                return;
-//            }
-//
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        } catch (ExecutionException e) {
-//            e.printStackTrace();
-//        } catch (CacheCreationException e) {
-//            e.printStackTrace();
-//        } catch (CacheLoadingException e) {
-//            e.printStackTrace();
-//        }
-
         getTraktManager().execute(req, cacheKey, DurationInMillis.ONE_MINUTE, new ListSearchRequestListener());
 	}
 
@@ -181,8 +162,6 @@ public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode
 
     @Override
     public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-        // do something here if necessary
-        // return false if nothing done?
         return false;
     }
 }

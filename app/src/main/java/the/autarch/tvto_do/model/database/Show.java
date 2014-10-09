@@ -152,12 +152,13 @@ public class Show {
                 nextEpisodeTitle = extendedInfo.nextEpisodeTitle;
                 nextEpisodeTime = extendedInfo.nextEpisodeTime;
             }
-            extendedInfoLastUpdate = new Date();
         } else {
             extendedInfoStatus = ExtendedInfoStatus.EXTENDED_INFO_UNKNOWN;
             nextEpisodeTitle = null;
             nextEpisodeTime = null;
         }
+
+        extendedInfoLastUpdate = new Date();
 	}
 
     public int getId() {

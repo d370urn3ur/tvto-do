@@ -80,22 +80,18 @@ public class ShowsListActivity extends BaseSpiceActivity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.shows_list, menu);
 		
-		_searchItem = (MenuItem)menu.findItem(R.id.action_search);
+		_searchItem = menu.findItem(R.id.action_search);
 	    SearchView searchView = (SearchView) MenuItemCompat.getActionView(_searchItem);
 	    searchView.setOnQueryTextListener(new OnQueryTextListener() {
 
 			@Override
 			public boolean onQueryTextChange(final String searchText) {
-
-//                searchForText(searchText);
                 _searchTextEmitterSubject.onNext(getSearchObservableFor(searchText));
 				return true;
 			}
 
 			@Override
 			public boolean onQueryTextSubmit(String searchText) {
-
-//				searchForText(searchText);
                 _searchTextEmitterSubject.onNext(getSearchObservableFor(searchText));
 				return true;
 			}
@@ -196,7 +192,6 @@ public class ShowsListActivity extends BaseSpiceActivity {
      */
     private Observable<String> getSearchObservableFor(final String searchText) {
         return Observable.create(new Observable.OnSubscribe<String>() {
-
             @Override
             public void call(Subscriber<? super String> subscriber) {
                 Ln.d("----------- inside the search observable");

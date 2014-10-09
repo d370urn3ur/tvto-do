@@ -25,7 +25,7 @@ public class Model {
 
     public enum ModelState {
         INITIALIZING,
-        INITIALIZED;
+        INITIALIZED
     }
 
     private ModelState _state;
