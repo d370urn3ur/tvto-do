@@ -99,6 +99,7 @@ public class Model {
                             .and()
                             .eq(Show.ShowColumns.EXTENDED_INFO_STATUS, Show.ExtendedInfoStatus.EXTENDED_INFO_UNKNOWN)
                             .prepare();
+
                 List<Show> shows = TVTDApplication.model().getShowDao().query(query);
                 EventBus.getDefault().post(new UpdateExpiredExtendedInfoEvent(shows));
 
