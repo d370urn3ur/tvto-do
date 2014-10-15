@@ -55,9 +55,6 @@ public class ShowsListActivity extends BaseSpiceActivity {
 
         if(savedInstanceState != null) {
             _lastQuery = savedInstanceState.getString(STATE_KEY_QUERY);
-//            if(!TextUtils.isEmpty(_lastQuery)) {
-//                searchForText(_lastQuery);
-//            }
         }
 	}
 
