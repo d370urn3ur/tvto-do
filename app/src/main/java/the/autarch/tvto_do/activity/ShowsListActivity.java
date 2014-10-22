@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import com.octo.android.robospice.persistence.DurationInMillis;
 
+import java.io.LineNumberReader;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -23,6 +24,8 @@ import rx.Subscriber;
 import rx.Subscription;
 import rx.android.observables.AndroidObservable;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 import the.autarch.tvto_do.R;
@@ -32,6 +35,7 @@ import the.autarch.tvto_do.fragment.ShowsSearchFragment;
 import the.autarch.tvto_do.model.database.Show;
 import the.autarch.tvto_do.network.ExtendedInfoRequest;
 import the.autarch.tvto_do.network.ExtendedInfoRequestListener;
+import the.autarch.tvto_do.rx.TVTDViewObservable;
 
 public class ShowsListActivity extends BaseSpiceActivity {
 
@@ -43,7 +47,7 @@ public class ShowsListActivity extends BaseSpiceActivity {
     private String _lastQuery;
 
     private Subscription _subscription;
-    private PublishSubject<Observable<String>> _searchTextEmitterSubject;
+    private Subscription _collapseSubscription;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -53,12 +57,6 @@ public class ShowsListActivity extends BaseSpiceActivity {
         if(savedInstanceState != null) {
             _lastQuery = savedInstanceState.getString(STATE_KEY_QUERY);
         }
-
-        _searchTextEmitterSubject = PublishSubject.create();
-        _subscription = AndroidObservable.bindActivity(this, Observable.switchOnNext(_searchTextEmitterSubject))
-                            .debounce(800, TimeUnit.MILLISECONDS, Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(_getSearchObserver());
 	}
 
     @Override
@@ -66,6 +64,12 @@ public class ShowsListActivity extends BaseSpiceActivity {
         super.onDestroy();
         if(_subscription != null) {
             _subscription.unsubscribe();
+            _subscription = null;
+        }
+
+        if(_collapseSubscription != null) {
+            _collapseSubscription.unsubscribe();
+            _collapseSubscription = null;
         }
     }
 
@@ -82,44 +86,68 @@ public class ShowsListActivity extends BaseSpiceActivity {
 		
 		_searchItem = menu.findItem(R.id.action_search);
 	    SearchView searchView = (SearchView) MenuItemCompat.getActionView(_searchItem);
-	    searchView.setOnQueryTextListener(new OnQueryTextListener() {
 
-			@Override
-			public boolean onQueryTextChange(final String searchText) {
-                _searchTextEmitterSubject.onNext(getSearchObservableFor(searchText));
-				return true;
-			}
 
-			@Override
-			public boolean onQueryTextSubmit(String searchText) {
-                _searchTextEmitterSubject.onNext(getSearchObservableFor(searchText));
-				return true;
-			}
-	    });
+        Observable<String> searchObservable = TVTDViewObservable.searchText(searchView)
+            .debounce(800, TimeUnit.MILLISECONDS)
+            .map(new Func1<SearchView, String>() {
+                @Override
+                public String call(SearchView searchView) {
+                    return searchView.getQuery().toString();
+                }
+            });
 
-	    MenuItemCompat.setOnActionExpandListener(_searchItem, new OnActionExpandListener() {
+        _subscription = AndroidObservable.bindActivity(this, searchObservable)
+            .subscribe(new Action1<String>() {
+                @Override
+                public void call(String queryText) {
+                    searchForText(queryText);
+                }
+            });
 
-            // When using the support library, the setOnActionExpandListener() method is
-            // static and accepts the MenuItem object as an argument
+        boolean initiallyCollapsed = TextUtils.isEmpty(_lastQuery);
 
-	        @Override
-	        public boolean onMenuItemActionCollapse(MenuItem item) {
-	        	hideSearch();
-	            return true;  // Return true to collapse action view
-	        }
+        Observable<Boolean> collapsedEvent = TVTDViewObservable.collapsed(_searchItem, initiallyCollapsed)
+                .map(new Func1<MenuItem, Boolean>() {
+                    @Override
+                    public Boolean call(MenuItem menuItem) {
+                        return MenuItemCompat.isActionViewExpanded(menuItem);
+                    }
+                });
+        _collapseSubscription = collapsedEvent.subscribe(new Action1<Boolean>() {
+            @Override
+            public void call(Boolean collapsed) {
+                if (collapsed) {
+                    hideSearch();
+                } else {
+                    showSearch();
+                }
+            }
+        });
 
-	        @Override
-	        public boolean onMenuItemActionExpand(MenuItem item) {
-	        	showSearch();
-	            return true;  // Return true to expand action view
-	        }
-	    });
+//	    MenuItemCompat.setOnActionExpandListener(_searchItem, new OnActionExpandListener() {
+//
+//            // When using the support library, the setOnActionExpandListener() method is
+//            // static and accepts the MenuItem object as an argument
+//
+//	        @Override
+//	        public boolean onMenuItemActionCollapse(MenuItem item) {
+//	        	hideSearch();
+//	            return true;  // Return true to collapse action view
+//	        }
+//
+//	        @Override
+//	        public boolean onMenuItemActionExpand(MenuItem item) {
+//	        	showSearch();
+//	            return true;  // Return true to expand action view
+//	        }
+//	    });
 
         if(!TextUtils.isEmpty(_lastQuery)) {
-            MenuItemCompat.expandActionView(_searchItem);
+//            MenuItemCompat.expandActionView(_searchItem);
             searchView.setQuery(_lastQuery, false);
         }
-	    
+
 	    return super.onCreateOptionsMenu(menu);
 	}
 
@@ -163,41 +191,5 @@ public class ShowsListActivity extends BaseSpiceActivity {
     public void onEventMainThread(NetworkEvent ev) {
         int length = ev.isSuccess() ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG;
         Toast.makeText(this, ev.getMessage(), length).show();
-    }
-
-    // -----------------------------------------------------------------------------------
-    // Main Rx entities
-    private Observer<String> _getSearchObserver() {
-        return new Observer<String>() {
-            @Override
-            public void onCompleted() {
-                Ln.d("--------- onComplete");
-            }
-            @Override
-            public void onError(Throwable e) {
-                Ln.e(e, "--------- Woops on error!");
-            }
-            @Override
-            public void onNext(String searchText) {
-                Ln.d(String.format("onNext You searched for %s", searchText));
-                searchForText(searchText);
-                onCompleted();
-            }
-        };
-    }
-
-    /**
-     * @param searchText search text entered onTextChange
-     * @return a new observable which searches for text searchText, explicitly say you want subscription to be done on a a non-UI thread, otherwise it'll default to the main thread.
-     */
-    private Observable<String> getSearchObservableFor(final String searchText) {
-        return Observable.create(new Observable.OnSubscribe<String>() {
-            @Override
-            public void call(Subscriber<? super String> subscriber) {
-                Ln.d("----------- inside the search observable");
-                subscriber.onNext(searchText);
-                // subscriber.onCompleted(); This seems to have no effect.
-            }
-        }).subscribeOn(Schedulers.io());
     }
 }
