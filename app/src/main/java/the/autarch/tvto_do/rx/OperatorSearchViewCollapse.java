@@ -13,29 +13,29 @@ import rx.functions.Action0;
 /**
  * Created by jpierce on 10/22/2014.
  */
-public class OperatorSearchViewCollapse<T extends MenuItem> implements Observable.OnSubscribe<T> {
+public class OperatorSearchViewCollapse implements Observable.OnSubscribe<Boolean> {
 
-    private final T input;
+    private final MenuItem input;
     private final boolean initiallyCollapsed;
 
-    public OperatorSearchViewCollapse(final T input, final boolean initiallyCollapsed) {
+    public OperatorSearchViewCollapse(final MenuItem input, final boolean initiallyCollapsed) {
         this.input = input;
         this.initiallyCollapsed = initiallyCollapsed;
     }
 
     @Override
-    public void call(final Subscriber<? super T> observer) {
+    public void call(final Subscriber<? super Boolean> observer) {
         Assertions.assertUiThread();
         final MenuItemCompat.OnActionExpandListener listener = new MenuItemCompat.OnActionExpandListener() {
             @Override
             public boolean onMenuItemActionExpand(MenuItem menuItem) {
-                observer.onNext(input);
+                observer.onNext(Boolean.FALSE);
                 return true;
             }
 
             @Override
             public boolean onMenuItemActionCollapse(MenuItem menuItem) {
-                observer.onNext(input);
+                observer.onNext(Boolean.TRUE);
                 return true;
             }
         };
@@ -53,7 +53,7 @@ public class OperatorSearchViewCollapse<T extends MenuItem> implements Observabl
             MenuItemCompat.expandActionView(input);
         }
 
-        observer.onNext(input);
+        observer.onNext(initiallyCollapsed);
 
         MenuItemCompat.setOnActionExpandListener(input, listener);
         observer.add(subscription);

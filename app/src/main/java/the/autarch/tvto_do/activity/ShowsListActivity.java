@@ -81,6 +81,7 @@ public class ShowsListActivity extends BaseSpiceActivity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
+
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.shows_list, menu);
 		
@@ -107,44 +108,20 @@ public class ShowsListActivity extends BaseSpiceActivity {
 
         boolean initiallyCollapsed = TextUtils.isEmpty(_lastQuery);
 
-        Observable<Boolean> collapsedEvent = TVTDViewObservable.collapsed(_searchItem, initiallyCollapsed)
-                .map(new Func1<MenuItem, Boolean>() {
+        Observable<Boolean> collapsedEvent = TVTDViewObservable.collapsed(_searchItem, initiallyCollapsed);
+        _collapseSubscription = AndroidObservable.bindActivity(this, collapsedEvent)
+                .subscribe(new Action1<Boolean>() {
                     @Override
-                    public Boolean call(MenuItem menuItem) {
-                        return MenuItemCompat.isActionViewExpanded(menuItem);
+                    public void call(Boolean collapsed) {
+                        if (collapsed) {
+                            hideSearch();
+                        } else {
+                            showSearch();
+                        }
                     }
                 });
-        _collapseSubscription = collapsedEvent.subscribe(new Action1<Boolean>() {
-            @Override
-            public void call(Boolean collapsed) {
-                if (collapsed) {
-                    hideSearch();
-                } else {
-                    showSearch();
-                }
-            }
-        });
-
-//	    MenuItemCompat.setOnActionExpandListener(_searchItem, new OnActionExpandListener() {
-//
-//            // When using the support library, the setOnActionExpandListener() method is
-//            // static and accepts the MenuItem object as an argument
-//
-//	        @Override
-//	        public boolean onMenuItemActionCollapse(MenuItem item) {
-//	        	hideSearch();
-//	            return true;  // Return true to collapse action view
-//	        }
-//
-//	        @Override
-//	        public boolean onMenuItemActionExpand(MenuItem item) {
-//	        	showSearch();
-//	            return true;  // Return true to expand action view
-//	        }
-//	    });
 
         if(!TextUtils.isEmpty(_lastQuery)) {
-//            MenuItemCompat.expandActionView(_searchItem);
             searchView.setQuery(_lastQuery, false);
         }
 

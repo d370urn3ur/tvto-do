@@ -18,7 +18,7 @@ public class TVTDViewObservable {
         return Observable.create(new OperatorSearchViewInput<T>(input, emitInitialValue));
     }
 
-    public static <T extends MenuItem> Observable<T> collapsed(final T input, final boolean initallyCollapsed) {
-        return Observable.create(new OperatorSearchViewCollapse<T>(input, initallyCollapsed));
+    public static Observable<Boolean> collapsed(final MenuItem input, final boolean initallyCollapsed) {
+        return Observable.create(new OperatorSearchViewCollapse(input, initallyCollapsed));
     }
 }
