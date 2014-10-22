@@ -43,7 +43,6 @@ public class ShowsListActivity extends BaseSpiceActivity {
 
     private static final String STATE_KEY_QUERY = "ShowsSearchFragment.state_key_query";
 
-    private MenuItem _searchItem;
     private String _lastQuery;
 
     private Subscription _subscription;
@@ -85,8 +84,8 @@ public class ShowsListActivity extends BaseSpiceActivity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.shows_list, menu);
 		
-		_searchItem = menu.findItem(R.id.action_search);
-	    SearchView searchView = (SearchView) MenuItemCompat.getActionView(_searchItem);
+		MenuItem searchItem = menu.findItem(R.id.action_search);
+	    SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
 
 
         Observable<String> searchObservable = TVTDViewObservable.searchText(searchView)
@@ -108,7 +107,7 @@ public class ShowsListActivity extends BaseSpiceActivity {
 
         boolean initiallyCollapsed = TextUtils.isEmpty(_lastQuery);
 
-        Observable<Boolean> collapsedEvent = TVTDViewObservable.collapsed(_searchItem, initiallyCollapsed);
+        Observable<Boolean> collapsedEvent = TVTDViewObservable.collapsed(searchItem, initiallyCollapsed);
         _collapseSubscription = AndroidObservable.bindActivity(this, collapsedEvent)
                 .subscribe(new Action1<Boolean>() {
                     @Override
