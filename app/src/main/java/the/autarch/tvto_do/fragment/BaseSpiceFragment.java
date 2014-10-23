@@ -11,7 +11,6 @@ import com.octo.android.robospice.SpiceManager;
 public class BaseSpiceFragment extends Fragment {
 
     public interface BaseSpiceFragmentHostInterface {
-        public SpiceManager getTraktManagerForFragment();
         public SpiceManager getRageManagerForFragment();
     }
     private BaseSpiceFragmentHostInterface _hostInterface;
@@ -30,10 +29,6 @@ public class BaseSpiceFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         _hostInterface = null;
-    }
-
-    protected SpiceManager getTraktManager() {
-        return _hostInterface.getTraktManagerForFragment();
     }
 
     protected SpiceManager getRageManager() { return _hostInterface.getRageManagerForFragment(); }

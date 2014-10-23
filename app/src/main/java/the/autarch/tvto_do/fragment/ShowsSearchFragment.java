@@ -2,6 +2,7 @@ package the.autarch.tvto_do.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.view.ActionMode;
 import android.view.LayoutInflater;
@@ -13,24 +14,25 @@ import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.octo.android.robospice.persistence.DurationInMillis;
-import com.octo.android.robospice.persistence.exception.SpiceException;
-import com.octo.android.robospice.request.listener.RequestListener;
-
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import butterknife.OnItemClick;
+import rx.Subscription;
+import rx.android.observables.AndroidObservable;
+import rx.functions.Action1;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.TVTDApplication;
 import the.autarch.tvto_do.adapter.SearchResultAdapter;
 import the.autarch.tvto_do.model.database.Show;
 import the.autarch.tvto_do.model.gson.SearchResultGson;
-import the.autarch.tvto_do.network.SearchRequest;
+import the.autarch.tvto_do.network.ApiManager;
 
-public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode.Callback {
+public class ShowsSearchFragment extends Fragment implements ActionMode.Callback {
 
 	private SearchResultAdapter _searchAdapter;
 	private ActionMode _actionMode;
+
+    private Subscription _searchSubscription;
 
     @InjectView(android.R.id.list) ListView _listView;
     @InjectView(android.R.id.empty) View _emptyView;
@@ -64,6 +66,16 @@ public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode
 		super.onActivityCreated(savedInstanceState);
 	}
 
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        if(_searchSubscription != null && !_searchSubscription.isUnsubscribed()) {
+            _searchSubscription.unsubscribe();
+            _searchSubscription = null;
+        }
+    }
+
     @OnItemClick(android.R.id.list)
     void onItemSelected(int position) {
 
@@ -93,12 +105,23 @@ public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode
             return;
         }
 
-        SearchRequest req = new SearchRequest(searchText);
-        String cacheKey = req.createCacheKey();
-
-        getTraktManager().cancel(req.getResultType(), cacheKey);
-
-        getTraktManager().execute(req, cacheKey, DurationInMillis.ONE_MINUTE, new ListSearchRequestListener());
+        if(_searchSubscription != null) {
+            _searchSubscription.unsubscribe();
+        }
+        _searchSubscription = AndroidObservable.bindFragment(this, ApiManager.searchForShow(searchText))
+                .subscribe(new Action1<SearchResultGson.List>() {
+                    @Override
+                    public void call(SearchResultGson.List searchResultGsons) {
+                        _searchAdapter.swapData(searchResultGsons);
+                    }
+                },
+                new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable throwable) {
+                        _searchAdapter.clear();
+                        Toast.makeText(getActivity(), throwable.toString(), Toast.LENGTH_LONG).show();
+                    }
+                });
 	}
 
     private void updateVisibleCells() {
@@ -114,20 +137,6 @@ public class ShowsSearchFragment extends BaseSpiceFragment implements ActionMode
         Show show = searchResult.toShow();
         TVTDApplication.model().getShowDao().createInBackground(show);
 	}
-
-    public final class ListSearchRequestListener implements RequestListener<SearchResultGson.List> {
-
-        @Override
-        public void onRequestFailure(SpiceException spiceException) {
-            _searchAdapter.clear();
-            Toast.makeText(getActivity(), spiceException.getMessage(), Toast.LENGTH_LONG).show();
-        }
-
-        @Override
-        public void onRequestSuccess(SearchResultGson.List searchResultJsons) {
-            _searchAdapter.swapData(searchResultJsons);
-        }
-    }
 
     /**
      * Action Item methods

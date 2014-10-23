@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 19
-    buildToolsVersion "20.0.0"
+    compileSdkVersion 21
+    buildToolsVersion "21.0.1"
 
     defaultConfig {
         applicationId "the.autarch.tvto_do"
         minSdkVersion 10
-        targetSdkVersion 19
+        targetSdkVersion 21
     }
 
     buildTypes {
@@ -26,16 +26,16 @@ android {
 dependencies {
 
     /* Android Core */
-    compile 'com.android.support:appcompat-v7:20.0.0'
+    compile 'com.android.support:appcompat-v7:21.0.0'
 
     /* Maven Repos */
     compile 'com.google.code.gson:gson:2.2.4'
     compile 'com.mcxiaoke.volley:library:1.0.6@aar'
 
     // RoboSpice
-    compile 'com.octo.android.robospice:robospice:1.4.13'
-    compile 'com.octo.android.robospice:robospice-retrofit:1.4.13'
-    compile 'com.octo.android.robospice:robospice-ormlite:1.4.13'
+    compile 'com.octo.android.robospice:robospice:1.4.14'
+    compile 'com.octo.android.robospice:robospice-retrofit:1.4.14'
+    compile 'com.octo.android.robospice:robospice-ormlite:1.4.14'
 
     // EventBus
     compile 'de.greenrobot:eventbus:2.2.1'
@@ -45,5 +45,8 @@ dependencies {
 
     // RxJava
     compile 'com.netflix.rxjava:rxjava-android:0.20.5'
+
+    // Retrofit (stand-alone)
+    compile 'com.squareup.retrofit:retrofit:1.7.0'
 
 }
