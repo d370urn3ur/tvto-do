@@ -3,9 +3,7 @@ package the.autarch.tvto_do.activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v4.view.MenuItemCompat.OnActionExpandListener;
 import android.support.v7.widget.SearchView;
-import android.support.v7.widget.SearchView.OnQueryTextListener;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,31 +11,26 @@ import android.widget.Toast;
 
 import com.octo.android.robospice.persistence.DurationInMillis;
 
-import java.io.LineNumberReader;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import roboguice.util.temp.Ln;
+import de.greenrobot.event.EventBus;
 import rx.Observable;
-import rx.Observer;
-import rx.Subscriber;
 import rx.Subscription;
 import rx.android.observables.AndroidObservable;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.schedulers.Schedulers;
-import rx.subjects.PublishSubject;
 import the.autarch.tvto_do.R;
+import the.autarch.tvto_do.TVTDApplication;
 import the.autarch.tvto_do.event.NetworkEvent;
 import the.autarch.tvto_do.event.UpdateExpiredExtendedInfoEvent;
 import the.autarch.tvto_do.fragment.ShowsSearchFragment;
 import the.autarch.tvto_do.model.database.Show;
-import the.autarch.tvto_do.network.ExtendedInfoRequest;
-import the.autarch.tvto_do.network.ExtendedInfoRequestListener;
+import the.autarch.tvto_do.model.gson.ExtendedInfoGson;
+import the.autarch.tvto_do.network.ApiManager;
 import the.autarch.tvto_do.rx.TVTDViewObservable;
 
-public class ShowsListActivity extends BaseSpiceActivity {
+public class ShowsListActivity extends BaseEventActivity {
 
 	public static final int LOADER_ID_SHOW = 1;
 
@@ -156,12 +149,21 @@ public class ShowsListActivity extends BaseSpiceActivity {
     }
 
     public void onEventMainThread(UpdateExpiredExtendedInfoEvent ev) {
-        List<Show> shows = ev.getExpiredShows();
-        for(Show s : shows) {
-            ExtendedInfoRequest req = new ExtendedInfoRequest(s.getTvrageId());
-            String cacheKey = req.createCacheKey();
-            getTvRageManager().execute(req, cacheKey, DurationInMillis.ONE_MINUTE, new ExtendedInfoRequestListener(s));
-        }
+
+        AndroidObservable.bindActivity(this, Observable.from(ev.getExpiredShows())
+                .flatMap(new Func1<Show, Observable<ExtendedInfoGson>>() {
+                    @Override
+                    public Observable<ExtendedInfoGson> call(Show show) {
+                        return ApiManager.getExtendedInfo(show.getTvrageId());
+                    }
+                }))
+                .forEach(new Action1<ExtendedInfoGson>() {
+                    @Override
+                    public void call(ExtendedInfoGson extendedInfoGson) {
+                        TVTDApplication.model().getShowDao().updateExtendedInfoInBackground(extendedInfoGson);
+                        EventBus.getDefault().post(new NetworkEvent(NetworkEvent.NetworkEventType.SUCCESS, "Finished updating show"));
+                    }
+                });
     }
 
     public void onEventMainThread(NetworkEvent ev) {

@@ -2,6 +2,7 @@ package the.autarch.tvto_do.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBarActivity;
@@ -14,14 +15,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import com.octo.android.robospice.persistence.DurationInMillis;
-
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import butterknife.OnItemClick;
 import de.greenrobot.event.EventBus;
+import rx.Subscription;
+import rx.android.observables.AndroidObservable;
+import rx.functions.Action1;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.TVTDApplication;
 import the.autarch.tvto_do.activity.ShowsListActivity;
@@ -29,16 +33,18 @@ import the.autarch.tvto_do.adapter.ShowAdapter;
 import the.autarch.tvto_do.event.ShowCreatedEvent;
 import the.autarch.tvto_do.loader.ShowLoader;
 import the.autarch.tvto_do.model.database.Show;
-import the.autarch.tvto_do.network.ExtendedInfoRequest;
-import the.autarch.tvto_do.network.ExtendedInfoRequestListener;
+import the.autarch.tvto_do.model.gson.ExtendedInfoGson;
+import the.autarch.tvto_do.network.ApiManager;
 
-public class ShowsListFragment extends BaseSpiceFragment implements LoaderManager.LoaderCallbacks<List<Show>>, ActionMode.Callback {
+public class ShowsListFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Show>>, ActionMode.Callback {
 	
 	private ShowAdapter _showAdapter;
 	private ActionMode _actionMode;
 
     @InjectView(android.R.id.list) ListView _listView;
     @InjectView(android.R.id.empty) View _emptyView;
+
+    private Queue<Subscription> _extInfoSubscriptions = new LinkedList<Subscription>();
 
     @Override
     public void onStart() {
@@ -50,6 +56,16 @@ public class ShowsListFragment extends BaseSpiceFragment implements LoaderManage
     public void onStop() {
         super.onStop();
         EventBus.getDefault().unregister(this);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        while(_extInfoSubscriptions.size() > 0) {
+            Subscription s = _extInfoSubscriptions.remove();
+            s.unsubscribe();
+        }
     }
 
     @Override
@@ -180,8 +196,15 @@ public class ShowsListFragment extends BaseSpiceFragment implements LoaderManage
     }
 
 	private void refreshShowExtendedInfo(Show show) {
-        ExtendedInfoRequest req = new ExtendedInfoRequest(show.getTvrageId());
-        String cacheKey = req.createCacheKey();
-        getRageManager().execute(req, cacheKey, DurationInMillis.ONE_MINUTE, new ExtendedInfoRequestListener(show));
+
+        Subscription s = AndroidObservable.bindFragment(this, ApiManager.getExtendedInfo(show.getTvrageId()))
+                .subscribe(new Action1<ExtendedInfoGson>() {
+                    @Override
+                    public void call(ExtendedInfoGson extendedInfoGson) {
+                        TVTDApplication.model().getShowDao().updateExtendedInfoInBackground(extendedInfoGson);
+                    }
+                });
+
+        _extInfoSubscriptions.add(s);
 	}
 }
