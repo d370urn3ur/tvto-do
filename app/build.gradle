@@ -32,11 +32,6 @@ dependencies {
     compile 'com.google.code.gson:gson:2.2.4'
     compile 'com.mcxiaoke.volley:library:1.0.6@aar'
 
-    // RoboSpice
-    compile 'com.octo.android.robospice:robospice:1.4.14'
-    compile 'com.octo.android.robospice:robospice-retrofit:1.4.14'
-    compile 'com.octo.android.robospice:robospice-ormlite:1.4.14'
-
     // EventBus
     compile 'de.greenrobot:eventbus:2.2.1'
 
