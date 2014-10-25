@@ -5,10 +5,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.android.volley.toolbox.ImageLoader;
-import com.android.volley.toolbox.NetworkImageView;
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.model.gson.SearchResultGson;
-import the.autarch.tvto_do.network.NetworkManager;
+import the.autarch.tvto_do.util.ViewHolder;
 
 public class SearchResultAdapter extends ArrayAdapter<SearchResultGson> {
 
@@ -33,27 +33,55 @@ public class SearchResultAdapter extends ArrayAdapter<SearchResultGson> {
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 
+        SearchResultGson searchResult = getItem(position);
+
 		if(convertView == null) {
 			convertView = _inflater.inflate(_layoutRes, parent, false);
-			SearchResultCellHolder holder = new SearchResultCellHolder(convertView);
-			convertView.setTag(holder);
+//			SearchResultCellHolder holder = new SearchResultCellHolder(convertView);
+//			convertView.setTag(holder);
 		}
-		
-		SearchResultGson searchResult = getItem(position);
+
+        ImageView iv = ViewHolder.get(convertView, R.id.search_cell_image);
+        TextView title = ViewHolder.get(convertView, R.id.search_cell_title);
+        TextView status = ViewHolder.get(convertView, R.id.search_cell_status);
+        TextView year = ViewHolder.get(convertView, R.id.search_cell_year);
+        TextView overview = ViewHolder.get(convertView, R.id.search_cell_overview);
+
+        Picasso.with(getContext()).cancelRequest(iv);
 
         boolean expanded = _expandedPosition == position;
-		
-		// set background color
+
+        if(searchResult.hasPoster()) {
+            Picasso.with(getContext())
+                    .load(searchResult.getPoster138Url())
+                    .placeholder(R.drawable.poster_dark)
+                    .error(R.drawable.poster_dark)
+                    .into(iv);
+        } else {
+            Picasso.with(getContext())
+                    .load(R.drawable.poster_dark)
+                    .into(iv);
+        }
+
+        title.setText(searchResult.title);
+        status.setText(searchResult.prettyStatus());
+        if(searchResult.hasEnded()) {
+            status.setVisibility(View.VISIBLE);
+        } else {
+            status.setVisibility(View.GONE);
+        }
+        year.setText(searchResult.year);
+        overview.setText(searchResult.overview);
+
         if(expanded) {
             convertView.setBackgroundColor(getContext().getResources().getColor(R.color.holo_blue_bright));
+            overview.setVisibility(View.VISIBLE);
         } else {
             int mod = position % 2;
             int colorRef = (mod == 0) ? R.color.holo_gray_bright : R.color.holo_gray_light;
             convertView.setBackgroundColor(getContext().getResources().getColor(colorRef));
+            overview.setVisibility(View.GONE);
         }
-		
-		SearchResultCellHolder holder = (SearchResultCellHolder)convertView.getTag();
-		holder.loadSearchResult(searchResult, expanded);
 
 		return convertView;
 	}
@@ -83,7 +111,7 @@ public class SearchResultAdapter extends ArrayAdapter<SearchResultGson> {
 	
 	class SearchResultCellHolder {
 
-		@InjectView(R.id.search_cell_image) NetworkImageView _iv;
+		@InjectView(R.id.search_cell_image) ImageView _iv;
 		@InjectView(R.id.search_cell_title) TextView _title;
 		@InjectView(R.id.search_cell_status) TextView _status;
 		@InjectView(R.id.search_cell_year) TextView _year;
@@ -93,15 +121,15 @@ public class SearchResultAdapter extends ArrayAdapter<SearchResultGson> {
 
             ButterKnife.inject(this, root);
 
-			_iv.setDefaultImageResId(R.drawable.poster_dark);
-			_iv.setErrorImageResId(R.drawable.poster_dark);
+//			_iv.setDefaultImageResId(R.drawable.poster_dark);
+//			_iv.setErrorImageResId(R.drawable.poster_dark);
 		}
 		
 		void loadSearchResult(final SearchResultGson searchResult, boolean expanded) {
 			
 			if(searchResult.hasPoster()) {
-				ImageLoader il = NetworkManager.getInstance().getImageLoader();
-				_iv.setImageUrl(searchResult.getPoster138Url(), il);
+//				ImageLoader il = NetworkManager.getInstance().getImageLoader();
+//				_iv.setImageUrl(searchResult.getPoster138Url(), il);
 			}
 			
 			_title.setText(searchResult.title);

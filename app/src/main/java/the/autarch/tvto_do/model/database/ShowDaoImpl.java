@@ -12,7 +12,6 @@ import the.autarch.tvto_do.event.SQLErrorEvent;
 import the.autarch.tvto_do.event.ShowCreatedEvent;
 import the.autarch.tvto_do.event.ShowDeletedEvent;
 import the.autarch.tvto_do.event.ShowUpdatedEvent;
-import the.autarch.tvto_do.model.FileManager;
 import the.autarch.tvto_do.model.gson.ExtendedInfoGson;
 
 /**
@@ -96,8 +95,6 @@ public class ShowDaoImpl extends BaseDaoImpl<Show, Integer> implements ShowDao {
             @Override
             public void run() {
                 try {
-
-                    FileManager.getInstance().deleteBitmapForFilename(show.getPoster138filepath());
 
                     if(delete(show) == 1) {
                         EventBus.getDefault().post(new ShowDeletedEvent());

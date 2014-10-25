@@ -2,8 +2,6 @@ package the.autarch.tvto_do.adapter;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,23 +10,21 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import the.autarch.tvto_do.R;
-import the.autarch.tvto_do.model.FileManager;
 import the.autarch.tvto_do.model.database.Show;
-import the.autarch.tvto_do.network.NetworkManager;
-import the.autarch.tvto_do.util.TVTDImageCache;
 
 public class ShowAdapter extends BaseAdapter {
 
     private List<Show> _data = new ArrayList<Show>();
 
 	private int _expandedPosition = -1;
-	private TVTDImageCache _imageCache = new TVTDImageCache();
 
     private Context _context;
     private LayoutInflater _inflater;
@@ -139,22 +135,11 @@ public class ShowAdapter extends BaseAdapter {
                 _overview.setVisibility(View.GONE);
             }
 
-            if(TextUtils.isEmpty(show.getPoster138Url())) {
-                _iv.setImageResource(R.drawable.poster_dark);
-            } else if(TextUtils.isEmpty(show.getPoster138filepath())) {
-				_iv.setImageResource(R.drawable.poster_dark);
-                NetworkManager.getInstance().downloadAndSaveImageForShow(show);
-
-			} else {
-				Bitmap b = _imageCache.getBitmap(show.getPoster138filepath());
-				if(b != null) {
-					_iv.setImageBitmap(b);
-				} else {
-					b = FileManager.getInstance().getBitmapForFilename(show.getPoster138filepath());
-					_imageCache.put(show.getPoster138filepath(), b);
-					_iv.setImageBitmap(b);
-				}
-			}
+            Picasso.with(_context)
+                        .load(show.getPoster138Url())
+                        .placeholder(R.drawable.poster_dark)
+                        .error(R.drawable.poster_dark)
+                        .into(_iv);
 		}
 	}
 }

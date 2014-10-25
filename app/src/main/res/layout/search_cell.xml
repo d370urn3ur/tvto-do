@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:padding="@dimen/cell_padding" >
     
-    <com.android.volley.toolbox.NetworkImageView
+    <ImageView
         android:id="@+id/search_cell_image"
         android:layout_height="@dimen/poster138Height"
         android:layout_width="@dimen/poster138Width" />

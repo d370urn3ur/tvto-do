@@ -30,7 +30,7 @@ dependencies {
 
     /* Maven Repos */
     compile 'com.google.code.gson:gson:2.2.4'
-    compile 'com.mcxiaoke.volley:library:1.0.6@aar'
+    compile 'com.j256.ormlite:ormlite-android:4.48'
 
     // EventBus
     compile 'de.greenrobot:eventbus:2.2.1'
@@ -41,7 +41,14 @@ dependencies {
     // RxJava
     compile 'com.netflix.rxjava:rxjava-android:0.20.5'
 
-    // Retrofit (stand-alone)
+    // Retrofit
     compile 'com.squareup.retrofit:retrofit:1.7.0'
+
+    // OkHttp
+    compile 'com.squareup.okhttp:okhttp:2.0.0'
+    compile 'com.squareup.okhttp:okhttp-urlconnection:2.0.0'
+
+    // Picasso
+    compile 'com.squareup.picasso:picasso:2.3.4'
 
 }
