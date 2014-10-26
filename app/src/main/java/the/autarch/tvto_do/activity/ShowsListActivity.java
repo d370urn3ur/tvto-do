@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -11,6 +12,8 @@ import android.widget.Toast;
 
 import java.util.concurrent.TimeUnit;
 
+import butterknife.ButterKnife;
+import butterknife.InjectView;
 import de.greenrobot.event.EventBus;
 import rx.Observable;
 import rx.Subscription;
@@ -37,11 +40,17 @@ public class ShowsListActivity extends BaseEventActivity {
 
     private Subscription _subscription;
     private Subscription _collapseSubscription;
+
+    @InjectView(R.id.toolbar) Toolbar _toolbar;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_shows_list);
+
+        ButterKnife.inject(this);
+
+        setSupportActionBar(_toolbar);
 
         if(savedInstanceState != null) {
             _lastQuery = savedInstanceState.getString(STATE_KEY_QUERY);

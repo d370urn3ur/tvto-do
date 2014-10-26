@@ -62,6 +62,10 @@ public class SearchResultGson {
 		if(!hasPoster()) {
 			return null;
 		}
+
+        if(images.poster.contains("poster-dark")) {
+            return images.poster;
+        }
 		
 		if(images.poster.contains(".")) {
 			int idx = images.poster.lastIndexOf(".");

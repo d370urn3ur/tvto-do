@@ -14,6 +14,7 @@ import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import the.autarch.tvto_do.BuildConfig;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.model.gson.SearchResultGson;
 import the.autarch.tvto_do.util.ViewHolder;
@@ -47,21 +48,14 @@ public class SearchResultAdapter extends ArrayAdapter<SearchResultGson> {
         TextView year = ViewHolder.get(convertView, R.id.search_cell_year);
         TextView overview = ViewHolder.get(convertView, R.id.search_cell_overview);
 
-        Picasso.with(getContext()).cancelRequest(iv);
-
         boolean expanded = _expandedPosition == position;
 
-        if(searchResult.hasPoster()) {
-            Picasso.with(getContext())
-                    .load(searchResult.getPoster138Url())
-                    .placeholder(R.drawable.poster_dark)
-                    .error(R.drawable.poster_dark)
-                    .into(iv);
-        } else {
-            Picasso.with(getContext())
-                    .load(R.drawable.poster_dark)
-                    .into(iv);
-        }
+        Picasso picasso = Picasso.with(getContext());
+        picasso.setIndicatorsEnabled(BuildConfig.DEBUG);
+        picasso.load(searchResult.getPoster138Url())
+            .placeholder(R.drawable.poster_dark)
+            .error(R.drawable.poster_dark)
+            .into(iv);
 
         title.setText(searchResult.title);
         status.setText(searchResult.prettyStatus());

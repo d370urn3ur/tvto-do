@@ -2,31 +2,38 @@ package the.autarch.tvto_do.adapter;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.support.v7.graphics.Palette;
+import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Transformation;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import the.autarch.tvto_do.BuildConfig;
 import the.autarch.tvto_do.R;
+import the.autarch.tvto_do.fragment.ShowsListFragment;
 import the.autarch.tvto_do.model.database.Show;
 
-public class ShowAdapter extends BaseAdapter {
+public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder> {
 
     private List<Show> _data = new ArrayList<Show>();
 
 	private int _expandedPosition = -1;
 
     private Context _context;
+    private ShowsListFragment.ShowSelector _clickListener;
     private LayoutInflater _inflater;
 	
 	// colors
@@ -35,10 +42,11 @@ public class ShowAdapter extends BaseAdapter {
 	private int _evenColor;
 	private int _oddColor;
 	
-	public ShowAdapter(Context context) {
+	public ShowAdapter(Context context, ShowsListFragment.ShowSelector clickListener) {
         super();
 
 		_context = context;
+        _clickListener = clickListener;
         _inflater = LayoutInflater.from(context);
 		Resources r = context.getResources();
 		_endedColor = r.getColor(R.color.show_cell_ended_bg);
@@ -47,47 +55,29 @@ public class ShowAdapter extends BaseAdapter {
 		_oddColor = r.getColor(R.color.show_cell_odd_bg);
 	}
 
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-
-        if(convertView == null) {
-            convertView = _inflater.inflate(R.layout.show_cell, parent, false);
-            ShowCellHolder h = new ShowCellHolder(convertView);
-            convertView.setTag(h);
-        }
-
-        Show show = (Show)getItem(position);
-
-        // set cell background
-        int bgColor;
-        if(show.getExtendedInfoStatus() == Show.ExtendedInfoStatus.EXTENDED_INFO_ENDED) {
-            bgColor = _endedColor;
-        } else if(show.isOutOfDate()) {
-            bgColor = _outOfDateColor;
-        } else {
-            bgColor = (position % 2 == 0) ? _evenColor : _oddColor;
-        }
-        convertView.setBackgroundColor(bgColor);
-
-        // populate cell with data
-        ShowCellHolder holder = (ShowCellHolder)convertView.getTag();
-        holder.populateWithShowAtPosition(show, position);
-
-        return convertView;
+    public Show getItem(int i) {
+        return _data.get(i);
     }
 
     @Override
-    public Object getItem(int position) {
-        return _data.get(position);
+    public ShowCellHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+        View view = _inflater.inflate(R.layout.show_cell, viewGroup, false);
+        return new ShowCellHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(ShowCellHolder showCellHolder, int i) {
+        Show show = _data.get(i);
+        showCellHolder.populateWithShowAtPosition(show, i);
     }
 
     @Override
     public long getItemId(int position) {
-        return ((Show)getItem(position)).getId();
+        return _data.get(position).getId();
     }
 
     @Override
-    public int getCount() {
+    public int getItemCount() {
         return _data.size();
     }
 
@@ -108,23 +98,33 @@ public class ShowAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
-    class ShowCellHolder {
-		
+    public class ShowCellHolder extends RecyclerView.ViewHolder {
+
 		@InjectView(R.id.show_cell_image) ImageView _iv;
-		@InjectView(R.id.show_cell_title) TextView _title;
+        @InjectView(R.id.show_cell_text_container) View _textContainer;
 		@InjectView(R.id.show_cell_next_title) TextView _nextTitle;
 		@InjectView(R.id.show_cell_next_date) TextView _nextDate;
 		@InjectView(R.id.show_cell_overview) TextView _overview;
 
         private int dateFormatFlags = DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_NUMERIC_DATE;
 		
-		ShowCellHolder(View root) {
-            ButterKnife.inject(this, root);
+		public ShowCellHolder(View itemView) {
+            super(itemView);
+            ButterKnife.inject(this, itemView);
 		}
 		
-		void populateWithShowAtPosition(Show show, int position) {
+		void populateWithShowAtPosition(final Show show, final int position) {
 
-            _title.setText(show.getTitle());
+            int bgColor;
+            if(show.hasEnded()) {
+                bgColor = _endedColor;
+            } else if(show.isOutOfDate()) {
+                bgColor = _outOfDateColor;
+            } else {
+                bgColor = (position % 2 == 0) ? _evenColor : _oddColor;
+            }
+//            itemView.setBackgroundColor(bgColor);
+
             _nextTitle.setText(show.prettyNextEpisode());
             _nextDate.setText(show.prettyNextDate(_context, dateFormatFlags));
             _overview.setText(show.getOverview());
@@ -135,11 +135,59 @@ public class ShowAdapter extends BaseAdapter {
                 _overview.setVisibility(View.GONE);
             }
 
-            Picasso.with(_context)
-                        .load(show.getPoster138Url())
-                        .placeholder(R.drawable.poster_dark)
-                        .error(R.drawable.poster_dark)
-                        .into(_iv);
+            Picasso p = Picasso.with(_context);
+            p.setIndicatorsEnabled(BuildConfig.DEBUG);
+            p.load(show.getPoster138Url())
+                    .placeholder(R.drawable.poster_dark)
+                    .error(R.drawable.poster_dark)
+                    .transform(new PaletteGrabberTransformation(show))
+                    .into(_iv, new Callback() {
+                        @Override
+                        public void onSuccess() {
+                            if(show.palette != null) {
+
+                                Palette.Swatch swatch = show.palette.getLightVibrantSwatch();
+                                if(swatch != null) {
+                                    _textContainer.setBackgroundColor(swatch.getRgb());
+                                    _nextTitle.setTextColor(swatch.getTitleTextColor());
+                                    _nextDate.setTextColor(swatch.getTitleTextColor());
+                                    _overview.setTextColor(swatch.getBodyTextColor());
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onError() {
+
+                        }
+                    });
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    _clickListener.onShowSelected(position);
+                }
+            });
 		}
 	}
+
+    class PaletteGrabberTransformation implements Transformation {
+
+        private Show show;
+
+        PaletteGrabberTransformation(Show show) {
+            this.show = show;
+        }
+
+        @Override
+        public Bitmap transform(Bitmap source) {
+            show.palette = Palette.generate(source);
+            return source;
+        }
+
+        @Override
+        public String key() {
+            return "paletteGrabber()";
+        }
+    }
 }

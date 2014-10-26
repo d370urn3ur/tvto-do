@@ -2,6 +2,7 @@ package the.autarch.tvto_do.model.database;
 
 import android.content.Context;
 import android.provider.BaseColumns;
+import android.support.v7.graphics.Palette;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.text.format.Time;
@@ -100,9 +101,13 @@ public class Show {
     }
 
 	// derived properties
+    public boolean hasEnded() {
+        return extendedInfoStatus == ExtendedInfoStatus.EXTENDED_INFO_ENDED;
+    }
+
 	public boolean isOutOfDate() {
 		
-		if(extendedInfoStatus == ExtendedInfoStatus.EXTENDED_INFO_ENDED) {
+		if(hasEnded()) {
 			return true;
 		}
 		
@@ -272,4 +277,6 @@ public class Show {
     public void setExtendedInfoStatus(ExtendedInfoStatus extendedInfoStatus) {
         this.extendedInfoStatus = extendedInfoStatus;
     }
+
+    public Palette palette;
 }

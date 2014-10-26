@@ -7,13 +7,14 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.view.ActionMode;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -21,7 +22,6 @@ import java.util.Queue;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
-import butterknife.OnItemClick;
 import de.greenrobot.event.EventBus;
 import rx.Subscription;
 import rx.android.observables.AndroidObservable;
@@ -41,8 +41,7 @@ public class ShowsListFragment extends Fragment implements LoaderManager.LoaderC
 	private ShowAdapter _showAdapter;
 	private ActionMode _actionMode;
 
-    @InjectView(android.R.id.list) ListView _listView;
-    @InjectView(android.R.id.empty) View _emptyView;
+    @InjectView(R.id.my_recycler_view) RecyclerView _recyclerView;
 
     private Queue<Subscription> _extInfoSubscriptions = new LinkedList<Subscription>();
 
@@ -85,10 +84,11 @@ public class ShowsListFragment extends Fragment implements LoaderManager.LoaderC
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 		
-		_showAdapter = new ShowAdapter(getActivity());
+		_showAdapter = new ShowAdapter(getActivity(), _selector);
 
-		_listView.setAdapter(_showAdapter);
-		_listView.setEmptyView(_emptyView);
+        _recyclerView.setHasFixedSize(true);
+        _recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+		_recyclerView.setAdapter(_showAdapter);
 
         getLoaderManager().initLoader(ShowsListActivity.LOADER_ID_SHOW, null, this);
 	}
@@ -96,39 +96,35 @@ public class ShowsListFragment extends Fragment implements LoaderManager.LoaderC
     @Override
     public void onResume() {
         super.onResume();
-        updateVisibleCells();
+        _showAdapter.notifyDataSetChanged();
     }
 
-    @OnItemClick(android.R.id.list)
-    public void onItemSelected(int position) {
-        _showAdapter.expandPosition(position);
-        updateVisibleCells();
+    public interface ShowSelector {
+        public void onShowSelected(int position);
+    }
 
-        if(_actionMode != null) {
-            int selectedPos = (Integer)_actionMode.getTag();
-            if(selectedPos == position) {
-                _actionMode.finish();
-                _actionMode = null;
-            } else {
-                _actionMode.setTag(position);
+    private ShowSelector _selector = new ShowSelector() {
+        @Override
+        public void onShowSelected(int position) {
+            _showAdapter.expandPosition(position);
+            _showAdapter.notifyDataSetChanged();
+
+            if(_actionMode != null) {
+                int selectedPos = (Integer)_actionMode.getTag();
+                if(selectedPos == position) {
+                    _actionMode.finish();
+                    _actionMode = null;
+                } else {
+                    _actionMode.setTag(position);
+                }
+                return;
             }
-            return;
-        }
 
-        // Start the CAB using the ActionMode.Callback defined above
-        _actionMode = ((ActionBarActivity)getActivity()).startSupportActionMode(ShowsListFragment.this);
-        _actionMode.setTag(position);
-    }
-	
-	private void updateVisibleCells() {
-		ListView lv = (ListView)getView().findViewById(android.R.id.list);
-		final int first = lv.getFirstVisiblePosition();
-		final int last = lv.getLastVisiblePosition();
-		for(int i = first; i <= last; ++i) {
-			View cell = lv.getChildAt(i - first);
-			_showAdapter.getView(i, cell, lv);
-		}
-	}
+            // Start the CAB using the ActionMode.Callback defined above
+            _actionMode = ((ActionBarActivity)getActivity()).startSupportActionMode(ShowsListFragment.this);
+            _actionMode.setTag(position);
+        }
+    };
 
 	@Override
 	public Loader<List<Show>> onCreateLoader(int loaderId, Bundle args) {
@@ -149,7 +145,7 @@ public class ShowsListFragment extends Fragment implements LoaderManager.LoaderC
 	public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
 
         int selectedPos = (Integer)_actionMode.getTag();
-        Show show = (Show)_showAdapter.getItem(selectedPos);
+        Show show = _showAdapter.getItem(selectedPos);
 		
 		switch(item.getItemId()) {
 			case R.id.action_remove:
@@ -176,7 +172,7 @@ public class ShowsListFragment extends Fragment implements LoaderManager.LoaderC
 	public void onDestroyActionMode(ActionMode arg0) {
 		_actionMode = null;
         _showAdapter.expandPosition(-1);
-        updateVisibleCells();
+        _showAdapter.notifyDataSetChanged();
 	}
 
 	@Override

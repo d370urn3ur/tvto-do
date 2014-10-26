@@ -6,11 +6,10 @@
     
     <dimen name="cell_padding">8dp</dimen>
     <dimen name="cell_text_size">16sp</dimen>
-    
-    <!-- <dimen name="poster138Height">203dp</dimen> -->
-    <dimen name="poster138Height">101dp</dimen>
-    <!-- <dimen name="poster138Width">138dp</dimen> -->
-    <dimen name="poster138Width">69dp</dimen>
+
+    <!-- Poster sizes per Trakt API: http://trakt.tv/api-docs/images -->
+    <dimen name="poster138Height">203dp</dimen>
+    <dimen name="poster138Width">138dp</dimen>
     <dimen name="poster300Height">450dp</dimen>
     <dimen name="poster300Width">300dp</dimen>
 

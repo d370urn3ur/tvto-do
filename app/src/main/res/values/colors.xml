@@ -18,6 +18,16 @@
     <color name="holo_purple">#ffaa66cc</color>
     <color name="holo_blue_bright">#ff00ddff</color>
     <color name="holo_gray_bright">#33CCCCCC</color>
+
+    <color name="material_teal_500">#009688</color>
+    <color name="material_teal_200">#80cbc4</color>
+    <color name="material_teal_700">#00796b</color>
+    <color name="material_orange_500">#f57c00</color>
+
+    <!-- Theme Colors -->
+    <color name="theme_primary">@color/material_teal_500</color>
+    <color name="theme_primary_dark">@color/material_teal_700</color>
+    <color name="theme_accent">@color/material_orange_500</color>
     
     <!--  Cell Colors -->
     <color name="show_cell_out_of_date_bg">@color/holo_red_light</color>

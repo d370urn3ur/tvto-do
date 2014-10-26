@@ -1,57 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="@dimen/cell_padding" >
-    
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
     <ImageView
         android:id="@+id/show_cell_image"
-        android:layout_height="@dimen/poster138Height"
-        android:layout_width="@dimen/poster138Width"
-        android:layout_marginTop="@dimen/cell_padding"
-        android:layout_marginLeft="@dimen/cell_padding" />
-    
-    <TextView
-        android:id="@+id/show_cell_title"
         android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_centerHorizontal="true"/>
+
+    <LinearLayout
+        android:id="@+id/show_cell_text_container"
         android:layout_width="match_parent"
-        android:layout_alignTop="@id/show_cell_image"
-        android:layout_toRightOf="@id/show_cell_image"
-        android:layout_marginLeft="@dimen/cell_padding"
-        android:layout_marginRight="@dimen/cell_padding"
-        android:textSize="@dimen/cell_text_size"
-        android:textStyle="bold" />
-    
-    <TextView
-        android:id="@+id/show_cell_next_title"
         android:layout_height="wrap_content"
-        android:layout_width="match_parent"
-        android:layout_below="@id/show_cell_title"
-        android:layout_alignLeft="@id/show_cell_title"
-        android:layout_alignRight="@id/show_cell_title"
-        android:layout_marginTop="@dimen/cell_padding"
-        android:textSize="@dimen/cell_text_size" />
-    
-    <TextView
-        android:id="@+id/show_cell_next_date"
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent"
-        android:layout_alignLeft="@id/show_cell_title"
-        android:layout_alignRight="@id/show_cell_title"
-        android:layout_below="@id/show_cell_next_title"
-        android:layout_marginTop="@dimen/cell_padding"
-        android:textSize="@dimen/cell_text_size"
-        android:textStyle="italic" />
-    
-    <TextView
-	    android:id="@+id/show_cell_overview"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:layout_alignLeft="@id/show_cell_image"
-	    android:layout_alignRight="@id/show_cell_title"
-	    android:layout_below="@id/show_cell_image"
-	    android:layout_marginTop="@dimen/cell_padding"
-	    android:textSize="@dimen/cell_text_size"
-	    android:visibility="gone" />
+        android:layout_below="@id/show_cell_image"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/show_cell_next_title"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:gravity="center"
+            android:layout_marginTop="@dimen/cell_padding"
+            android:textSize="@dimen/cell_text_size" />
+
+        <TextView
+            android:id="@+id/show_cell_next_date"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:gravity="center"
+            android:layout_marginTop="@dimen/cell_padding"
+            android:textSize="@dimen/cell_text_size"
+            android:textStyle="italic" />
+
+        <TextView
+            android:id="@+id/show_cell_overview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_marginTop="@dimen/cell_padding"
+            android:textSize="@dimen/cell_text_size"
+            android:visibility="gone" />
+
+    </LinearLayout>
 
 </RelativeLayout>
