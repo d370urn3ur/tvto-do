@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.view.ActionMode;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -13,7 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import java.util.Collections;
+import java.util.ArrayList;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -34,7 +35,7 @@ public class ShowsSearchFragment extends Fragment implements ActionMode.Callback
 
     private Subscription _searchSubscription;
 
-    @InjectView(R.id.search_recycler_view) RecyclerView _listView;
+    @InjectView(R.id.search_recycler_view) RecyclerView _recyclerView;
 
     @Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -54,7 +55,10 @@ public class ShowsSearchFragment extends Fragment implements ActionMode.Callback
         super.onViewCreated(view, savedInstanceState);
 
         _searchAdapter = new SearchResultAdapter(getActivity(), R.layout.search_cell);
-        _listView.setAdapter(_searchAdapter);
+
+        _recyclerView.setHasFixedSize(true);
+        _recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        _recyclerView.setAdapter(_searchAdapter);
     }
 
     @Override
@@ -94,7 +98,7 @@ public class ShowsSearchFragment extends Fragment implements ActionMode.Callback
 	public void searchForText(String searchText) {
 
         if(searchText.length() == 0) {
-            _searchAdapter.swapData(Collections.EMPTY_LIST);
+            _searchAdapter.swapData(new ArrayList<SearchResultGson>());
             return;
         }
 
@@ -111,7 +115,7 @@ public class ShowsSearchFragment extends Fragment implements ActionMode.Callback
                 new Action1<Throwable>() {
                     @Override
                     public void call(Throwable throwable) {
-                        _searchAdapter.swapData(Collections.EMPTY_LIST);
+                        _searchAdapter.swapData(new ArrayList<SearchResultGson>());
                         Toast.makeText(getActivity(), throwable.toString(), Toast.LENGTH_LONG).show();
                     }
                 });

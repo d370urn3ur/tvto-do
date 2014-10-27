@@ -10,7 +10,7 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.ButterKnife;
@@ -25,7 +25,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
 	private int _layoutRes;
     LayoutInflater _inflater;
 
-    List<SearchResultGson> _data = Collections.EMPTY_LIST;
+    List<SearchResultGson> _data = new ArrayList<SearchResultGson>();
 	
 	public SearchResultAdapter(Context context, int resource) {
         _context = context;
