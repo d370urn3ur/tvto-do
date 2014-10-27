@@ -3,6 +3,7 @@ package the.autarch.tvto_do.fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -54,7 +55,7 @@ public class ShowsSearchFragment extends Fragment implements ActionMode.Callback
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        _searchAdapter = new SearchResultAdapter(getActivity(), R.layout.search_cell);
+        _searchAdapter = new SearchResultAdapter(getActivity(), R.layout.search_cell, _searchSelector);
 
         _recyclerView.setHasFixedSize(true);
         _recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -76,24 +77,30 @@ public class ShowsSearchFragment extends Fragment implements ActionMode.Callback
         }
     }
 
-//    @OnItemClick(android.R.id.list)
-//    void onItemSelected(int position) {
-//
-//        if (_actionMode != null) {
-//            int selectedPosition = (Integer) _actionMode.getTag();
-//            if (selectedPosition == position) {
-//                _actionMode.finish();
-//                _actionMode = null;
-//            } else {
-//                _actionMode.setTag(position);
-//            }
-//            return;
-//        }
-//
-//        // Start the CAB using the ActionMode.Callback defined above
-//        _actionMode = ((ActionBarActivity) getActivity()).startSupportActionMode(ShowsSearchFragment.this);
-//        _actionMode.setTag(position);
-//    }
+    public interface SearchSelector {
+        public void onSearchResultSelected(int position);
+    }
+
+    private SearchSelector _searchSelector = new SearchSelector() {
+        @Override
+        public void onSearchResultSelected(int position) {
+
+            if (_actionMode != null) {
+                int selectedPosition = (Integer) _actionMode.getTag();
+                if (selectedPosition == position) {
+                    _actionMode.finish();
+                    _actionMode = null;
+                } else {
+                    _actionMode.setTag(position);
+                }
+                return;
+            }
+
+            // Start the CAB using the ActionMode.Callback defined above
+            _actionMode = ((ActionBarActivity) getActivity()).startSupportActionMode(ShowsSearchFragment.this);
+            _actionMode.setTag(position);
+        }
+    };
 	
 	public void searchForText(String searchText) {
 

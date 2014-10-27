@@ -15,7 +15,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Transformation;
 
@@ -134,22 +133,14 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
                 _overview.setVisibility(View.GONE);
             }
 
-            setGradientBackground(show);
+            setGradientBackground();
 
             Picasso.with(_context)
                     .load(show.getPoster300Url())
                     .placeholder(R.drawable.poster_dark)
                     .error(R.drawable.poster_dark)
-                    .transform(new PaletteGrabberTransformation(show))
-                    .into(_iv, new Callback() {
-                        @Override
-                        public void onSuccess() {
-                            setGradientBackground(show);
-                        }
-
-                        @Override
-                        public void onError() {}
-                    });
+//                    .transform(new PaletteGrabberTransformation(show))
+                    .into(_iv);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -159,15 +150,20 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
             });
 		}
 
-        private void setGradientBackground(Show show) {
+        private void setGradientBackground() {
+
+            int[] gradColors = new int[] {_context.getResources().getColor(R.color.material_teal_700), _context.getResources().getColor(R.color.material_teal_200) - 0x20000000};
+
+            GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, gradColors);
+
             if(Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-                _textContainer.setBackgroundDrawable(show.getGradientBackground());
+                _textContainer.setBackgroundDrawable(bg);
             } else {
-                _textContainer.setBackground(show.getGradientBackground());
+                _textContainer.setBackground(bg);
             }
-            _nextTitle.setTextColor(show.getTitleColor());
-            _nextDate.setTextColor(show.getTitleColor());
-            _overview.setTextColor(show.getBodyColor());
+            _nextTitle.setTextColor(Color.WHITE);
+            _nextDate.setTextColor(Color.WHITE);
+            _overview.setTextColor(Color.WHITE);
         }
 	}
 
@@ -192,7 +188,7 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
 
                 GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[] {startBg, endBg});
 
-                show.setColorInfo(bg, titleColor, bodyColor);
+//                show.setColorInfo(bg, titleColor, bodyColor);
 
             return source;
         }

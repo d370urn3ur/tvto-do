@@ -1,8 +1,6 @@
 package the.autarch.tvto_do.model.database;
 
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
 import android.provider.BaseColumns;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
@@ -96,35 +94,6 @@ public class Show {
     @DatabaseField(columnName= ShowColumns.NEXT_EPISODE_TITLE) private String nextEpisodeTitle;
     @DatabaseField(columnName= ShowColumns.NEXT_EPISODE_TIME, persisterClass = TimePersister.class) private Time nextEpisodeTime;
     @DatabaseField(columnName=ShowColumns.EXTENDED_INFO_LAST_UPDATE, persisterClass=DatePersister.class) private Date extendedInfoLastUpdate;
-
-    private GradientDrawable gradientBackground;
-    private int titleColor;
-    private int bodyColor;
-
-    public boolean hasColorInfo() {
-        return gradientBackground == null;
-    }
-
-    public void setColorInfo(GradientDrawable bg, int titleColor, int bodyColor) {
-        this.gradientBackground = bg;
-        this.titleColor = titleColor;
-        this.bodyColor = bodyColor;
-    }
-
-    public GradientDrawable getGradientBackground() {
-        if(gradientBackground == null) {
-            return new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[] {Color.BLACK, Color.BLACK});
-        }
-        return gradientBackground;
-    }
-
-    public int getTitleColor() {
-        return titleColor;
-    }
-
-    public int getBodyColor() {
-        return bodyColor;
-    }
 
     public Show() {
         // required no-args constructor for ORMLite

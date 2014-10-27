@@ -17,20 +17,23 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import the.autarch.tvto_do.BuildConfig;
 import the.autarch.tvto_do.R;
+import the.autarch.tvto_do.fragment.ShowsSearchFragment;
 import the.autarch.tvto_do.model.gson.SearchResultGson;
 
 public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapter.SearchResultCellHolder> {
 
     private Context _context;
 	private int _layoutRes;
-    LayoutInflater _inflater;
+    private LayoutInflater _inflater;
+    private ShowsSearchFragment.SearchSelector _searchSelectorListener;
 
     List<SearchResultGson> _data = new ArrayList<SearchResultGson>();
 	
-	public SearchResultAdapter(Context context, int resource) {
+	public SearchResultAdapter(Context context, int resource, ShowsSearchFragment.SearchSelector searchSelector) {
         _context = context;
 		_layoutRes = resource;
         _inflater = LayoutInflater.from(context);
+        _searchSelectorListener = searchSelector;
 	}
 	
 	public void swapData(List<SearchResultGson> data) {
@@ -50,7 +53,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
     }
 
     @Override
-    public void onBindViewHolder(SearchResultCellHolder searchResultCellHolder, int i) {
+    public void onBindViewHolder(SearchResultCellHolder searchResultCellHolder, final int i) {
         SearchResultGson item = _data.get(i);
         searchResultCellHolder.loadSearchResult(item, i);
     }
@@ -73,7 +76,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
             ButterKnife.inject(this, itemView);
         }
 		
-		void loadSearchResult(final SearchResultGson searchResult, int position) {
+		void loadSearchResult(final SearchResultGson searchResult, final int position) {
 			
 			_title.setText(searchResult.title);
 			_status.setText(searchResult.prettyStatus());
@@ -91,6 +94,15 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
                     .placeholder(R.drawable.poster_dark)
                     .error(R.drawable.poster_dark)
                     .into(_iv);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(_searchSelectorListener != null) {
+                        _searchSelectorListener.onSearchResultSelected(position);
+                    }
+                }
+            });
 		}
 	}
 }
