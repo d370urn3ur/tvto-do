@@ -3,6 +3,9 @@ package the.autarch.tvto_do.adapter;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
@@ -21,7 +24,6 @@ import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
-import the.autarch.tvto_do.BuildConfig;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.fragment.ShowsListFragment;
 import the.autarch.tvto_do.model.database.Show;
@@ -39,8 +41,6 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
 	// colors
 	private int _endedColor;
 	private int _outOfDateColor;
-	private int _evenColor;
-	private int _oddColor;
 	
 	public ShowAdapter(Context context, ShowsListFragment.ShowSelector clickListener) {
         super();
@@ -51,8 +51,6 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
 		Resources r = context.getResources();
 		_endedColor = r.getColor(R.color.show_cell_ended_bg);
 		_outOfDateColor = r.getColor(R.color.show_cell_out_of_date_bg);
-		_evenColor = r.getColor(R.color.show_cell_even_bg);
-		_oddColor = r.getColor(R.color.show_cell_odd_bg);
 	}
 
     public Show getItem(int i) {
@@ -121,9 +119,10 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
             } else if(show.isOutOfDate()) {
                 bgColor = _outOfDateColor;
             } else {
-                bgColor = (position % 2 == 0) ? _evenColor : _oddColor;
+                bgColor = Color.WHITE;
             }
-//            itemView.setBackgroundColor(bgColor);
+
+            itemView.setBackgroundColor(bgColor);
 
             _nextTitle.setText(show.prettyNextEpisode());
             _nextDate.setText(show.prettyNextDate(_context, dateFormatFlags));
@@ -135,31 +134,21 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
                 _overview.setVisibility(View.GONE);
             }
 
-            Picasso p = Picasso.with(_context);
-            p.setIndicatorsEnabled(BuildConfig.DEBUG);
-            p.load(show.getPoster138Url())
+            setGradientBackground(show);
+
+            Picasso.with(_context)
+                    .load(show.getPoster300Url())
                     .placeholder(R.drawable.poster_dark)
                     .error(R.drawable.poster_dark)
                     .transform(new PaletteGrabberTransformation(show))
                     .into(_iv, new Callback() {
                         @Override
                         public void onSuccess() {
-                            if(show.palette != null) {
-
-                                Palette.Swatch swatch = show.palette.getLightVibrantSwatch();
-                                if(swatch != null) {
-                                    _textContainer.setBackgroundColor(swatch.getRgb());
-                                    _nextTitle.setTextColor(swatch.getTitleTextColor());
-                                    _nextDate.setTextColor(swatch.getTitleTextColor());
-                                    _overview.setTextColor(swatch.getBodyTextColor());
-                                }
-                            }
+                            setGradientBackground(show);
                         }
 
                         @Override
-                        public void onError() {
-
-                        }
+                        public void onError() {}
                     });
 
             itemView.setOnClickListener(new View.OnClickListener() {
@@ -169,6 +158,17 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
                 }
             });
 		}
+
+        private void setGradientBackground(Show show) {
+            if(Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                _textContainer.setBackgroundDrawable(show.getGradientBackground());
+            } else {
+                _textContainer.setBackground(show.getGradientBackground());
+            }
+            _nextTitle.setTextColor(show.getTitleColor());
+            _nextDate.setTextColor(show.getTitleColor());
+            _overview.setTextColor(show.getBodyColor());
+        }
 	}
 
     class PaletteGrabberTransformation implements Transformation {
@@ -181,7 +181,19 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
 
         @Override
         public Bitmap transform(Bitmap source) {
-            show.palette = Palette.generate(source);
+
+                Palette palette = Palette.generate(source);
+                Palette.Swatch swatch = palette.getLightMutedSwatch();
+
+                int startBg = palette.getLightVibrantColor(Color.WHITE);
+                int endBg = swatch.getRgb() - 0x20000000;
+                int titleColor = swatch.getTitleTextColor();
+                int bodyColor = swatch.getBodyTextColor();
+
+                GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[] {startBg, endBg});
+
+                show.setColorInfo(bg, titleColor, bodyColor);
+
             return source;
         }
 

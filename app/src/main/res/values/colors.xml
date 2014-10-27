@@ -31,8 +31,6 @@
     
     <!--  Cell Colors -->
     <color name="show_cell_out_of_date_bg">@color/holo_red_light</color>
-    <color name="show_cell_even_bg">@color/holo_gray_light</color>
-    <color name="show_cell_odd_bg">@color/holo_gray_bright</color>
     <color name="show_cell_ended_bg">@color/holo_orange_light</color>
     
 </resources>

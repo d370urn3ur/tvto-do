@@ -7,7 +7,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.view.ActionMode;
-import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -41,7 +41,7 @@ public class ShowsListFragment extends Fragment implements LoaderManager.LoaderC
 	private ShowAdapter _showAdapter;
 	private ActionMode _actionMode;
 
-    @InjectView(R.id.my_recycler_view) RecyclerView _recyclerView;
+    @InjectView(R.id.shows_recycler_view) RecyclerView _recyclerView;
 
     private Queue<Subscription> _extInfoSubscriptions = new LinkedList<Subscription>();
 
@@ -87,8 +87,8 @@ public class ShowsListFragment extends Fragment implements LoaderManager.LoaderC
 		_showAdapter = new ShowAdapter(getActivity(), _selector);
 
         _recyclerView.setHasFixedSize(true);
-        _recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-		_recyclerView.setAdapter(_showAdapter);
+        _recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2, GridLayoutManager.VERTICAL, false));
+        _recyclerView.setAdapter(_showAdapter);
 
         getLoaderManager().initLoader(ShowsListActivity.LOADER_ID_SHOW, null, this);
 	}

@@ -3,20 +3,20 @@ package the.autarch.tvto_do.fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.view.ActionMode;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 import android.widget.Toast;
+
+import java.util.Collections;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
-import butterknife.OnItemClick;
 import rx.Subscription;
 import rx.android.observables.AndroidObservable;
 import rx.functions.Action1;
@@ -34,8 +34,7 @@ public class ShowsSearchFragment extends Fragment implements ActionMode.Callback
 
     private Subscription _searchSubscription;
 
-    @InjectView(android.R.id.list) ListView _listView;
-    @InjectView(android.R.id.empty) View _emptyView;
+    @InjectView(R.id.search_recycler_view) RecyclerView _listView;
 
     @Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -55,9 +54,6 @@ public class ShowsSearchFragment extends Fragment implements ActionMode.Callback
         super.onViewCreated(view, savedInstanceState);
 
         _searchAdapter = new SearchResultAdapter(getActivity(), R.layout.search_cell);
-        _searchAdapter.setNotifyOnChange(true);
-
-        _listView.setEmptyView(_emptyView);
         _listView.setAdapter(_searchAdapter);
     }
 
@@ -76,32 +72,29 @@ public class ShowsSearchFragment extends Fragment implements ActionMode.Callback
         }
     }
 
-    @OnItemClick(android.R.id.list)
-    void onItemSelected(int position) {
-
-        _searchAdapter.toggleExpandedCell(position);
-        updateVisibleCells();
-
-        if (_actionMode != null) {
-            int selectedPosition = (Integer) _actionMode.getTag();
-            if (selectedPosition == position) {
-                _actionMode.finish();
-                _actionMode = null;
-            } else {
-                _actionMode.setTag(position);
-            }
-            return;
-        }
-
-        // Start the CAB using the ActionMode.Callback defined above
-        _actionMode = ((ActionBarActivity) getActivity()).startSupportActionMode(ShowsSearchFragment.this);
-        _actionMode.setTag(position);
-    }
+//    @OnItemClick(android.R.id.list)
+//    void onItemSelected(int position) {
+//
+//        if (_actionMode != null) {
+//            int selectedPosition = (Integer) _actionMode.getTag();
+//            if (selectedPosition == position) {
+//                _actionMode.finish();
+//                _actionMode = null;
+//            } else {
+//                _actionMode.setTag(position);
+//            }
+//            return;
+//        }
+//
+//        // Start the CAB using the ActionMode.Callback defined above
+//        _actionMode = ((ActionBarActivity) getActivity()).startSupportActionMode(ShowsSearchFragment.this);
+//        _actionMode.setTag(position);
+//    }
 	
 	public void searchForText(String searchText) {
 
         if(searchText.length() == 0) {
-            _searchAdapter.clear();
+            _searchAdapter.swapData(Collections.EMPTY_LIST);
             return;
         }
 
@@ -118,20 +111,11 @@ public class ShowsSearchFragment extends Fragment implements ActionMode.Callback
                 new Action1<Throwable>() {
                     @Override
                     public void call(Throwable throwable) {
-                        _searchAdapter.clear();
+                        _searchAdapter.swapData(Collections.EMPTY_LIST);
                         Toast.makeText(getActivity(), throwable.toString(), Toast.LENGTH_LONG).show();
                     }
                 });
 	}
-
-    private void updateVisibleCells() {
-        final int first = _listView.getFirstVisiblePosition();
-        final int last = _listView.getLastVisiblePosition();
-        for(int i = first; i <= last; ++i) {
-            View cell = _listView.getChildAt(i - first);
-            _searchAdapter.getView(i, cell, _listView);
-        }
-    }
 
 	private void addSearchResultToList(SearchResultGson searchResult) {
         Show show = searchResult.toShow();
@@ -165,8 +149,6 @@ public class ShowsSearchFragment extends Fragment implements ActionMode.Callback
     @Override
     public void onDestroyActionMode(ActionMode mode) {
         _actionMode = null;
-        _searchAdapter.toggleExpandedCell(-1);
-        updateVisibleCells();
     }
 
     @Override
