@@ -15,8 +15,8 @@ import retrofit.http.Query;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 import rx.Observable;
-import the.autarch.tvto_do.model.gson.ExtendedInfoGson;
-import the.autarch.tvto_do.model.gson.SearchResultGson;
+import the.autarch.tvto_do.model.ExtendedInfoGson;
+import the.autarch.tvto_do.model.SearchResultGson;
 
 /**
  * Created by joshua.pierce on 23/10/14.

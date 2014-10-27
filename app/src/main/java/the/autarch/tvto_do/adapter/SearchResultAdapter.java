@@ -18,7 +18,7 @@ import butterknife.InjectView;
 import the.autarch.tvto_do.BuildConfig;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.fragment.ShowsSearchFragment;
-import the.autarch.tvto_do.model.gson.SearchResultGson;
+import the.autarch.tvto_do.model.SearchResultGson;
 
 public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapter.SearchResultCellHolder> {
 

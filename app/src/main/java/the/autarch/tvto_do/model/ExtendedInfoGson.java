@@ -1,4 +1,4 @@
-package the.autarch.tvto_do.model.gson;
+package the.autarch.tvto_do.model;
 
 import android.text.TextUtils;
 import android.text.format.Time;

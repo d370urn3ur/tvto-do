@@ -2,9 +2,6 @@ package the.autarch.tvto_do.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.GridLayoutManager;
@@ -16,30 +13,32 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.couchbase.lite.Database;
+import com.couchbase.lite.LiveQuery;
+import com.couchbase.lite.QueryRow;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
+
+import javax.inject.Inject;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
-import de.greenrobot.event.EventBus;
 import rx.Subscription;
-import rx.android.observables.AndroidObservable;
-import rx.functions.Action1;
 import the.autarch.tvto_do.R;
-import the.autarch.tvto_do.TVTDApplication;
-import the.autarch.tvto_do.activity.ShowsListActivity;
 import the.autarch.tvto_do.adapter.ShowAdapter;
-import the.autarch.tvto_do.event.ShowCreatedEvent;
-import the.autarch.tvto_do.loader.ShowLoader;
-import the.autarch.tvto_do.model.database.Show;
-import the.autarch.tvto_do.model.gson.ExtendedInfoGson;
-import the.autarch.tvto_do.network.ApiManager;
+import the.autarch.tvto_do.model.SearchResultGson;
 
-public class ShowsListFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Show>>, ActionMode.Callback {
+public class ShowsListFragment extends BaseInjectableFragment implements ActionMode.Callback {
 	
 	private ShowAdapter _showAdapter;
 	private ActionMode _actionMode;
+
+    private LiveQuery _showsQuery;
+
+    @Inject Database _database;
 
     @InjectView(R.id.shows_recycler_view) RecyclerView _recyclerView;
 
@@ -48,13 +47,13 @@ public class ShowsListFragment extends Fragment implements LoaderManager.LoaderC
     @Override
     public void onStart() {
         super.onStart();
-        EventBus.getDefault().register(this);
+//        EventBus.getDefault().register(this);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        EventBus.getDefault().unregister(this);
+//        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -89,9 +88,35 @@ public class ShowsListFragment extends Fragment implements LoaderManager.LoaderC
         _recyclerView.setHasFixedSize(true);
         _recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2, GridLayoutManager.VERTICAL, false));
         _recyclerView.setAdapter(_showAdapter);
-
-        getLoaderManager().initLoader(ShowsListActivity.LOADER_ID_SHOW, null, this);
 	}
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        inject();
+
+        _showsQuery = _database.getView("shows").createQuery().toLiveQuery();
+        _showsQuery.addChangeListener(new LiveQuery.ChangeListener() {
+            @Override
+            public void changed(final LiveQuery.ChangeEvent changeEvent) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ArrayList<SearchResultGson> results = new ArrayList<SearchResultGson>();
+                        for (Iterator<QueryRow> it = changeEvent.getRows(); it.hasNext();) {
+                            QueryRow next = it.next();
+                            SearchResultGson r = SearchResultGson.fromDocumentProperties(next.getDocumentProperties());
+                            results.add(r);
+                        }
+                        _showAdapter.swapData(results);
+                    }
+                });
+            }
+        });
+
+        _showsQuery.start();
+    }
 
     @Override
     public void onResume() {
@@ -127,34 +152,19 @@ public class ShowsListFragment extends Fragment implements LoaderManager.LoaderC
     };
 
 	@Override
-	public Loader<List<Show>> onCreateLoader(int loaderId, Bundle args) {
-        return new ShowLoader(getActivity());
-	}
-
-	@Override
-	public void onLoadFinished(Loader<List<Show>> loader, List<Show> data) {
-		_showAdapter.swapData(data);
-	}
-
-	@Override
-	public void onLoaderReset(Loader<List<Show>> loader) {
-		_showAdapter.swapData(null);
-	}
-
-	@Override
 	public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
 
         int selectedPos = (Integer)_actionMode.getTag();
-        Show show = _showAdapter.getItem(selectedPos);
+        SearchResultGson show = _showAdapter.getItem(selectedPos);
 		
 		switch(item.getItemId()) {
 			case R.id.action_remove:
-				removeShowFromList(show);
+//				removeShowFromList(show);
 				mode.finish();
 				return true;
 			
 			case R.id.action_refresh:
-				refreshShowExtendedInfo(show);
+//				refreshShowExtendedInfo(show);
 				mode.finish();
 				return true;
 		}
@@ -180,27 +190,19 @@ public class ShowsListFragment extends Fragment implements LoaderManager.LoaderC
 		return false;
 	}
 	
-	private void removeShowFromList(Show show) {
-        TVTDApplication.model().getShowDao().deleteInBackground(show);
+	private void removeShowFromList(SearchResultGson show) {
 	}
 
-    public void onEventMainThread(ShowCreatedEvent event) {
-        Show show = event.getShow();
-        if(show.getExtendedInfoStatus() == Show.ExtendedInfoStatus.EXTENDED_INFO_UNKNOWN) {
-            refreshShowExtendedInfo(event.getShow());
-        }
-    }
+	private void refreshShowExtendedInfo(SearchResultGson show) {
 
-	private void refreshShowExtendedInfo(Show show) {
-
-        Subscription s = AndroidObservable.bindFragment(this, ApiManager.getExtendedInfo(show.getTvrageId()))
-                .subscribe(new Action1<ExtendedInfoGson>() {
-                    @Override
-                    public void call(ExtendedInfoGson extendedInfoGson) {
-                        TVTDApplication.model().getShowDao().updateExtendedInfoInBackground(extendedInfoGson);
-                    }
-                });
-
-        _extInfoSubscriptions.add(s);
+//        Subscription s = AndroidObservable.bindFragment(this, ApiManager.getExtendedInfo(show.tvrage_id))
+//                .subscribe(new Action1<ExtendedInfoGson>() {
+//                    @Override
+//                    public void call(ExtendedInfoGson extendedInfoGson) {
+//                        TVTDApplication.model().getShowDao().updateExtendedInfoInBackground(extendedInfoGson);
+//                    }
+//                });
+//
+//        _extInfoSubscriptions.add(s);
 	}
 }

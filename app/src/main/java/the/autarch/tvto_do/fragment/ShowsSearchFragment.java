@@ -2,7 +2,6 @@ package the.autarch.tvto_do.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,7 +14,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.couchbase.lite.CouchbaseLiteException;
+import com.couchbase.lite.Database;
+import com.couchbase.lite.Document;
+
 import java.util.ArrayList;
+import java.util.Map;
+
+import javax.inject.Inject;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -23,18 +29,18 @@ import rx.Subscription;
 import rx.android.observables.AndroidObservable;
 import rx.functions.Action1;
 import the.autarch.tvto_do.R;
-import the.autarch.tvto_do.TVTDApplication;
 import the.autarch.tvto_do.adapter.SearchResultAdapter;
-import the.autarch.tvto_do.model.database.Show;
-import the.autarch.tvto_do.model.gson.SearchResultGson;
+import the.autarch.tvto_do.model.SearchResultGson;
 import the.autarch.tvto_do.network.ApiManager;
 
-public class ShowsSearchFragment extends Fragment implements ActionMode.Callback {
+public class ShowsSearchFragment extends BaseInjectableFragment implements ActionMode.Callback {
 
 	private SearchResultAdapter _searchAdapter;
 	private ActionMode _actionMode;
 
     private Subscription _searchSubscription;
+
+    @Inject Database _database;
 
     @InjectView(R.id.search_recycler_view) RecyclerView _recyclerView;
 
@@ -65,6 +71,8 @@ public class ShowsSearchFragment extends Fragment implements ActionMode.Callback
     @Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
+
+        inject();
 	}
 
     @Override
@@ -129,9 +137,14 @@ public class ShowsSearchFragment extends Fragment implements ActionMode.Callback
 	}
 
 	private void addSearchResultToList(SearchResultGson searchResult) {
-        Show show = searchResult.toShow();
-        TVTDApplication.model().getShowDao().createInBackground(show);
-	}
+        Document document = _database.createDocument();
+        Map<String, Object> props = searchResult.getDocumentProperties();
+        try {
+            document.putProperties(props);
+        } catch (CouchbaseLiteException e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * Action Item methods

@@ -8,31 +8,30 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
+import com.couchbase.lite.Database;
+import com.couchbase.lite.Emitter;
+import com.couchbase.lite.LiveQuery;
+import com.couchbase.lite.Mapper;
+import com.couchbase.lite.View;
+
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
-import de.greenrobot.event.EventBus;
 import rx.Observable;
 import rx.Subscription;
 import rx.android.observables.AndroidObservable;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import the.autarch.tvto_do.R;
-import the.autarch.tvto_do.TVTDApplication;
-import the.autarch.tvto_do.event.NetworkEvent;
-import the.autarch.tvto_do.event.UpdateExpiredExtendedInfoEvent;
 import the.autarch.tvto_do.fragment.ShowsSearchFragment;
-import the.autarch.tvto_do.model.database.Show;
-import the.autarch.tvto_do.model.gson.ExtendedInfoGson;
-import the.autarch.tvto_do.network.ApiManager;
 import the.autarch.tvto_do.rx.TVTDViewObservable;
 
 public class ShowsListActivity extends BaseEventActivity {
-
-	public static final int LOADER_ID_SHOW = 1;
 
     private static final String STATE_KEY_QUERY = "ShowsSearchFragment.state_key_query";
 
@@ -40,6 +39,8 @@ public class ShowsListActivity extends BaseEventActivity {
 
     private Subscription _subscription;
     private Subscription _collapseSubscription;
+
+    @Inject Database _database;
 
     @InjectView(R.id.toolbar) Toolbar _toolbar;
 	
@@ -152,28 +153,5 @@ public class ShowsListActivity extends BaseEventActivity {
             _lastQuery = query;
             searchFrag.searchForText(query);
         }
-    }
-
-    public void onEventMainThread(UpdateExpiredExtendedInfoEvent ev) {
-
-        AndroidObservable.bindActivity(this, Observable.from(ev.getExpiredShows())
-                .flatMap(new Func1<Show, Observable<ExtendedInfoGson>>() {
-                    @Override
-                    public Observable<ExtendedInfoGson> call(Show show) {
-                        return ApiManager.getExtendedInfo(show.getTvrageId());
-                    }
-                }))
-                .forEach(new Action1<ExtendedInfoGson>() {
-                    @Override
-                    public void call(ExtendedInfoGson extendedInfoGson) {
-                        TVTDApplication.model().getShowDao().updateExtendedInfoInBackground(extendedInfoGson);
-                        EventBus.getDefault().post(new NetworkEvent(NetworkEvent.NetworkEventType.SUCCESS, "Finished updating show"));
-                    }
-                });
-    }
-
-    public void onEventMainThread(NetworkEvent ev) {
-        int length = ev.isSuccess() ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG;
-        Toast.makeText(this, ev.getMessage(), length).show();
     }
 }

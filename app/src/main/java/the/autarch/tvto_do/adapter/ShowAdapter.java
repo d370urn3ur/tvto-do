@@ -25,11 +25,11 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.fragment.ShowsListFragment;
-import the.autarch.tvto_do.model.database.Show;
+import the.autarch.tvto_do.model.SearchResultGson;
 
 public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder> {
 
-    private List<Show> _data = new ArrayList<Show>();
+    private List<SearchResultGson> _data = new ArrayList<SearchResultGson>();
 
 	private int _expandedPosition = -1;
 
@@ -52,7 +52,7 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
 		_outOfDateColor = r.getColor(R.color.show_cell_out_of_date_bg);
 	}
 
-    public Show getItem(int i) {
+    public SearchResultGson getItem(int i) {
         return _data.get(i);
     }
 
@@ -64,13 +64,13 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
 
     @Override
     public void onBindViewHolder(ShowCellHolder showCellHolder, int i) {
-        Show show = _data.get(i);
+        SearchResultGson show = _data.get(i);
         showCellHolder.populateWithShowAtPosition(show, i);
     }
 
     @Override
     public long getItemId(int position) {
-        return _data.get(position).getId();
+        return 0;
     }
 
     @Override
@@ -86,7 +86,7 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
         }
 	}
 
-    public void swapData(List<Show> data) {
+    public void swapData(List<SearchResultGson> data) {
         _expandedPosition = -1;
         _data.clear();
         if(data != null) {
@@ -110,22 +110,22 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
             ButterKnife.inject(this, itemView);
 		}
 		
-		void populateWithShowAtPosition(final Show show, final int position) {
+		void populateWithShowAtPosition(final SearchResultGson show, final int position) {
 
             int bgColor;
             if(show.hasEnded()) {
                 bgColor = _endedColor;
-            } else if(show.isOutOfDate()) {
-                bgColor = _outOfDateColor;
+//            } else if(show.isOutOfDate()) {
+//                bgColor = _outOfDateColor;
             } else {
                 bgColor = Color.WHITE;
             }
 
             itemView.setBackgroundColor(bgColor);
 
-            _nextTitle.setText(show.prettyNextEpisode());
-            _nextDate.setText(show.prettyNextDate(_context, dateFormatFlags));
-            _overview.setText(show.getOverview());
+//            _nextTitle.setText(show.prettyNextEpisode());
+//            _nextDate.setText(show.prettyNextDate(_context, dateFormatFlags));
+//            _overview.setText(show.getOverview());
 
             if(_expandedPosition == position) {
                 _overview.setVisibility(View.VISIBLE);
@@ -169,9 +169,9 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
 
     class PaletteGrabberTransformation implements Transformation {
 
-        private Show show;
+        private SearchResultGson show;
 
-        PaletteGrabberTransformation(Show show) {
+        PaletteGrabberTransformation(SearchResultGson show) {
             this.show = show;
         }
 

@@ -1,15 +1,27 @@
-package the.autarch.tvto_do.model.gson;
+package the.autarch.tvto_do.model;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
-
-import the.autarch.tvto_do.model.database.Show;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SearchResultGson {
 
     public static class List extends ArrayList<SearchResultGson> {
     }
+
+    public static final ArrayList<String> SHOW_CELL_PROJECTION = new ArrayList<String>() {{
+        add("title");
+        add("year");
+        add("overview");
+        add("tvrage_id");
+        add("ended");
+        add("images");
+    }};
+    public static final String KEY_POSTER_URL = "poster";
 
     @SerializedName("title") public String title;
     @SerializedName("year") public String year;
@@ -21,6 +33,18 @@ public class SearchResultGson {
     @SerializedName("tvrage_id") public String tvrage_id;
     @SerializedName("ended") private boolean ended;
     @SerializedName("images") private ImagesWrapper images;
+
+    public Map<String, Object> getDocumentProperties() {
+        Gson gson = new Gson();
+        String json = gson.toJson(this);
+        return gson.fromJson(json, new TypeToken<HashMap<String, Object>>(){}.getType());
+    }
+
+    public static SearchResultGson fromDocumentProperties(Map<String, Object> properties) {
+        Gson gson = new Gson();
+        String json = gson.toJson(properties);
+        return gson.fromJson(json, SearchResultGson.class);
+    }
 	
 	public class ImagesWrapper {
         @SerializedName("poster") public String poster;
@@ -76,26 +100,4 @@ public class SearchResultGson {
 		
 		return null;
 	}
-
-    public Show toShow() {
-
-        Show show = new Show();
-        show.setTitle(title);
-        show.setYear(year);
-        show.setUrl(url);
-        show.setCountry(country);
-        show.setOverview(overview);
-        show.setImdbId(imdb_id);
-        show.setTvdbId(tvdb_id);
-        show.setTvrageId(tvrage_id);
-        show.setPoster138Url(getPoster138Url());
-        show.setPoster300Url(getPoster300Url());
-        if(ended) {
-            show.setExtendedInfoStatus(Show.ExtendedInfoStatus.EXTENDED_INFO_ENDED);
-        } else {
-            show.setExtendedInfoStatus(Show.ExtendedInfoStatus.EXTENDED_INFO_UNKNOWN);
-        }
-
-        return show;
-    }
 }
