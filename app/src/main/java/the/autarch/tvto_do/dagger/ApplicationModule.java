@@ -18,6 +18,7 @@ import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
 import the.autarch.tvto_do.TVTDApplication;
+import the.autarch.tvto_do.model.ShowSchema;
 
 /**
  * Created by joshua.pierce on 27/10/14.
@@ -51,9 +52,10 @@ public class ApplicationModule {
             showsView.setMap(new Mapper() {
                 @Override
                 public void map(Map<String, Object> documentProperties, Emitter emitter) {
-                    emitter.emit("show", documentProperties);
+                    Object name = documentProperties.get(ShowSchema.KEY_TITLE);
+                    emitter.emit(name, documentProperties);
                 }
-            }, "5");
+            }, "6");
 
             return db;
 

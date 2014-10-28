@@ -13,7 +13,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
+import com.couchbase.lite.Document;
 import com.couchbase.lite.LiveQuery;
 import com.couchbase.lite.QueryRow;
 
@@ -28,10 +30,13 @@ import javax.inject.Inject;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import rx.Subscription;
+import rx.android.observables.AndroidObservable;
+import rx.functions.Action1;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.adapter.ShowAdapter;
-import the.autarch.tvto_do.model.SearchResultGson;
+import the.autarch.tvto_do.model.ExtendedInfo;
 import the.autarch.tvto_do.model.Show;
+import the.autarch.tvto_do.network.ApiManager;
 
 public class ShowsListFragment extends BaseInjectableFragment implements ActionMode.Callback {
 	
@@ -161,12 +166,12 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
 		
 		switch(item.getItemId()) {
 			case R.id.action_remove:
-//				removeShowFromList(show);
+				removeShowFromList(show);
 				mode.finish();
 				return true;
 			
 			case R.id.action_refresh:
-//				refreshShowExtendedInfo(show);
+				refreshShowExtendedInfo(show);
 				mode.finish();
 				return true;
 		}
@@ -192,19 +197,31 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
 		return false;
 	}
 	
-	private void removeShowFromList(SearchResultGson show) {
-	}
+	private void removeShowFromList(Show show) {
+        Document document = _database.getDocument(show.getId());
+        try {
+            document.delete();
+        } catch (CouchbaseLiteException e) {
+            e.printStackTrace();
+        }
+    }
 
-	private void refreshShowExtendedInfo(SearchResultGson show) {
+	private void refreshShowExtendedInfo(final Show show) {
 
-//        Subscription s = AndroidObservable.bindFragment(this, ApiManager.getExtendedInfo(show.tvrage_id))
-//                .subscribe(new Action1<ExtendedInfoGson>() {
-//                    @Override
-//                    public void call(ExtendedInfoGson extendedInfoGson) {
-//                        TVTDApplication.model().getShowDao().updateExtendedInfoInBackground(extendedInfoGson);
-//                    }
-//                });
-//
-//        _extInfoSubscriptions.add(s);
+        Subscription s = AndroidObservable.bindFragment(this, ApiManager.getExtendedInfo(show.tvrageId))
+                .subscribe(new Action1<ExtendedInfo>() {
+                    @Override
+                    public void call(ExtendedInfo extendedInfo) {
+                        show.updateExtendedInfo(extendedInfo);
+                        Document document = _database.getDocument(show.getId());
+                        try {
+                            document.putProperties(show);
+                        } catch (CouchbaseLiteException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
+        _extInfoSubscriptions.add(s);
 	}
 }

@@ -8,7 +8,8 @@
         android:id="@+id/show_cell_image"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:layout_centerHorizontal="true"/>
+        android:layout_centerHorizontal="true"
+        android:adjustViewBounds="true"/>
 
     <LinearLayout
         android:id="@+id/show_cell_text_container"
@@ -37,15 +38,6 @@
             android:layout_marginTop="@dimen/cell_padding"
             android:textSize="@dimen/cell_text_size"
             android:textStyle="italic" />
-
-        <TextView
-            android:id="@+id/show_cell_overview"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_marginTop="@dimen/cell_padding"
-            android:textSize="@dimen/cell_text_size"
-            android:visibility="gone" />
 
     </LinearLayout>
 

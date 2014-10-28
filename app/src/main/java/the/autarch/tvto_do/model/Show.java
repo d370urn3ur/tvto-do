@@ -60,6 +60,10 @@ public class Show extends CBLObject {
         annotate();
     }
 
+    public String getId() {
+        return (String)get("_id");
+    }
+
     public boolean hasEnded() {
         return ended != null && ended;
     }

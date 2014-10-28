@@ -98,7 +98,6 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
         @InjectView(R.id.show_cell_text_container) View _textContainer;
 		@InjectView(R.id.show_cell_next_title) TextView _nextTitle;
 		@InjectView(R.id.show_cell_next_date) TextView _nextDate;
-		@InjectView(R.id.show_cell_overview) TextView _overview;
 
         private int dateFormatFlags = DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_NUMERIC_DATE;
 		
@@ -111,18 +110,11 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
 
             _nextTitle.setText(show.prettyNextEpisode());
             _nextDate.setText(show.prettyStatus());
-            _overview.setText(show.overview);
-
-            if(_expandedPosition == position) {
-                _overview.setVisibility(View.VISIBLE);
-            } else {
-                _overview.setVisibility(View.GONE);
-            }
 
             setGradientBackground();
 
             Picasso.with(_context)
-                    .load(show.getPoster300Url())
+                    .load(show.getPoster138Url())
                     .placeholder(R.drawable.poster_dark)
                     .error(R.drawable.poster_dark)
                     .into(_iv);
@@ -137,7 +129,7 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
 
         private void setGradientBackground() {
 
-            int[] gradColors = new int[] {_context.getResources().getColor(R.color.material_teal_700), _context.getResources().getColor(R.color.material_teal_200) - 0x20000000};
+            int[] gradColors = new int[] {_context.getResources().getColor(R.color.material_teal_500), _context.getResources().getColor(R.color.material_teal_200) - 0x20000000};
 
             GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, gradColors);
 
@@ -148,7 +140,6 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
             }
             _nextTitle.setTextColor(Color.WHITE);
             _nextDate.setTextColor(Color.WHITE);
-            _overview.setTextColor(Color.WHITE);
         }
 	}
 }
