@@ -15,7 +15,7 @@ import retrofit.http.Query;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 import rx.Observable;
-import the.autarch.tvto_do.model.ExtendedInfoGson;
+import the.autarch.tvto_do.model.ExtendedInfo;
 import the.autarch.tvto_do.model.SearchResultGson;
 
 /**
@@ -71,12 +71,12 @@ public class ApiManager {
     private interface RageRetroService {
 
         @GET("/tools/quickinfo.php")
-        public Observable<ExtendedInfoGson> getExtendedInfo(@Query("sid") String showId);
+        public Observable<ExtendedInfo> getExtendedInfo(@Query("sid") String showId);
     }
 
     public static final RageRetroService _rageService = _rageRestAdapter.create(RageRetroService.class);
 
-    public static Observable<ExtendedInfoGson> getExtendedInfo(String showId) {
+    public static Observable<ExtendedInfo> getExtendedInfo(String showId) {
         return _rageService.getExtendedInfo(showId);
     }
 
@@ -110,7 +110,7 @@ public class ApiManager {
                         values.put(kv[0], kv[1]);
                     }
                 }
-                ExtendedInfoGson extInfo = ExtendedInfoGson.parseValues(values);
+                ExtendedInfo extInfo = ExtendedInfo.parseValues(values);
                 return extInfo;
 
             } catch (IOException e) {

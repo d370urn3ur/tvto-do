@@ -1,12 +1,12 @@
 package the.autarch.tvto_do.model;
 
 import android.text.TextUtils;
-import android.text.format.Time;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class ExtendedInfoGson {
+public class ExtendedInfo {
 
     private static final String SHOW_ID_KEY = "Show ID";
 	private static final String TITLE_KEY = "Next Episode";
@@ -15,12 +15,26 @@ public class ExtendedInfoGson {
 
     public String tvRageId;
 	public String nextEpisodeTitle;
-	public Time nextEpisodeTime;
-    private boolean ended;
-	
-	public static ExtendedInfoGson parseValues(HashMap<String, String> values) {
+	public Long nextEpisodeTime;
+    private Boolean ended;
 
-		ExtendedInfoGson result = new ExtendedInfoGson();
+    public Map<String, Object> toMap() {
+        return new HashMap<String, Object>() {{
+            if(nextEpisodeTime != null) {
+                put(ShowSchema.KEY_NEXT_EPISODE_DATE, nextEpisodeTime);
+            }
+            if(nextEpisodeTitle != null) {
+                put(ShowSchema.KEY_NEXT_EPISODE_TITLE, nextEpisodeTitle);
+            }
+            if(ended != null) {
+                put(ShowSchema.KEY_ENDED, ended);
+            }
+        }};
+    }
+	
+	public static ExtendedInfo parseValues(HashMap<String, String> values) {
+
+		ExtendedInfo result = new ExtendedInfo();
 
         if(values.containsKey(SHOW_ID_KEY)) {
             result.tvRageId = values.get(SHOW_ID_KEY);
@@ -37,11 +51,8 @@ public class ExtendedInfoGson {
 		}
 		
 		if(values.containsKey(DATE_KEY)) {
-			Time time = new Time();
 			int seconds = Integer.parseInt(values.get(DATE_KEY));
-			long millis = TimeUnit.SECONDS.toMillis(seconds);
-			time.set(millis);
-            result.nextEpisodeTime = time;
+            result.nextEpisodeTime = TimeUnit.SECONDS.toMillis(seconds);
 		}
 
         if(values.containsKey(ENDED_KEY)) {
@@ -51,14 +62,6 @@ public class ExtendedInfoGson {
 		
 		return result;
 	}
-
-    public boolean hasInfo() {
-        return !TextUtils.isEmpty(tvRageId) && (!TextUtils.isEmpty(nextEpisodeTitle) || nextEpisodeTime != null);
-    }
-
-    public boolean hasEnded() {
-        return ended;
-    }
 
     /* EXAMPLES:
 
@@ -88,7 +91,7 @@ public class ExtendedInfoGson {
         Ended@
         Latest Episode@06x13^In Care Of^Jun/23/2013
         Next Episode@07x01^Season 7, Episode 1^2014
-        GMT+0 NODST@
+        GMT+0 NODST@1234567
         Country@USA
         Status@Final Season
         Classification@Scripted

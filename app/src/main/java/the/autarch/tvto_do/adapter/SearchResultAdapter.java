@@ -18,7 +18,7 @@ import butterknife.InjectView;
 import the.autarch.tvto_do.BuildConfig;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.fragment.ShowsSearchFragment;
-import the.autarch.tvto_do.model.SearchResultGson;
+import the.autarch.tvto_do.model.Show;
 
 public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapter.SearchResultCellHolder> {
 
@@ -27,7 +27,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
     private LayoutInflater _inflater;
     private ShowsSearchFragment.SearchSelector _searchSelectorListener;
 
-    List<SearchResultGson> _data = new ArrayList<SearchResultGson>();
+    List<Show> _data = new ArrayList<Show>();
 	
 	public SearchResultAdapter(Context context, int resource, ShowsSearchFragment.SearchSelector searchSelector) {
         _context = context;
@@ -36,13 +36,13 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
         _searchSelectorListener = searchSelector;
 	}
 	
-	public void swapData(List<SearchResultGson> data) {
+	public void swapData(List<Show> data) {
         _data.clear();
         _data.addAll(data);
         notifyDataSetChanged();
     }
 
-    public SearchResultGson getItem(int position) {
+    public Show getItem(int position) {
         return _data.get(position);
     }
 
@@ -54,7 +54,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
 
     @Override
     public void onBindViewHolder(SearchResultCellHolder searchResultCellHolder, final int i) {
-        SearchResultGson item = _data.get(i);
+        Show item = _data.get(i);
         searchResultCellHolder.loadSearchResult(item, i);
     }
 
@@ -76,7 +76,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<SearchResultAdapte
             ButterKnife.inject(this, itemView);
         }
 		
-		void loadSearchResult(final SearchResultGson searchResult, final int position) {
+		void loadSearchResult(final Show searchResult, final int position) {
 			
 			_title.setText(searchResult.title);
 			_status.setText(searchResult.prettyStatus());

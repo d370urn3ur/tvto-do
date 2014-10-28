@@ -20,6 +20,7 @@ import com.couchbase.lite.QueryRow;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Queue;
 
 import javax.inject.Inject;
@@ -30,6 +31,7 @@ import rx.Subscription;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.adapter.ShowAdapter;
 import the.autarch.tvto_do.model.SearchResultGson;
+import the.autarch.tvto_do.model.Show;
 
 public class ShowsListFragment extends BaseInjectableFragment implements ActionMode.Callback {
 	
@@ -103,11 +105,11 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        ArrayList<SearchResultGson> results = new ArrayList<SearchResultGson>();
+                        ArrayList<Show> results = new ArrayList<Show>();
                         for (Iterator<QueryRow> it = changeEvent.getRows(); it.hasNext();) {
                             QueryRow next = it.next();
-                            SearchResultGson r = SearchResultGson.fromDocumentProperties(next.getDocumentProperties());
-                            results.add(r);
+                            Map<String, Object> properties = (Map<String, Object>)next.getValue();
+                            results.add(new Show(properties));
                         }
                         _showAdapter.swapData(results);
                     }
@@ -155,7 +157,7 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
 	public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
 
         int selectedPos = (Integer)_actionMode.getTag();
-        SearchResultGson show = _showAdapter.getItem(selectedPos);
+        Show show = _showAdapter.getItem(selectedPos);
 		
 		switch(item.getItemId()) {
 			case R.id.action_remove:

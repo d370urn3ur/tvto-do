@@ -19,7 +19,7 @@ import com.couchbase.lite.Database;
 import com.couchbase.lite.Document;
 
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -31,6 +31,7 @@ import rx.functions.Action1;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.adapter.SearchResultAdapter;
 import the.autarch.tvto_do.model.SearchResultGson;
+import the.autarch.tvto_do.model.Show;
 import the.autarch.tvto_do.network.ApiManager;
 
 public class ShowsSearchFragment extends BaseInjectableFragment implements ActionMode.Callback {
@@ -113,7 +114,7 @@ public class ShowsSearchFragment extends BaseInjectableFragment implements Actio
 	public void searchForText(String searchText) {
 
         if(searchText.length() == 0) {
-            _searchAdapter.swapData(new ArrayList<SearchResultGson>());
+            _searchAdapter.swapData(new ArrayList<Show>());
             return;
         }
 
@@ -122,25 +123,28 @@ public class ShowsSearchFragment extends BaseInjectableFragment implements Actio
         }
         _searchSubscription = AndroidObservable.bindFragment(this, ApiManager.searchForShow(searchText))
                 .subscribe(new Action1<SearchResultGson.List>() {
-                    @Override
-                    public void call(SearchResultGson.List searchResultGsons) {
-                        _searchAdapter.swapData(searchResultGsons);
-                    }
-                },
-                new Action1<Throwable>() {
-                    @Override
-                    public void call(Throwable throwable) {
-                        _searchAdapter.swapData(new ArrayList<SearchResultGson>());
-                        Toast.makeText(getActivity(), throwable.toString(), Toast.LENGTH_LONG).show();
-                    }
-                });
+                               @Override
+                               public void call(SearchResultGson.List searchResultGsons) {
+                                   List<Show> shows = new ArrayList<Show>();
+                                   for(SearchResultGson gson : searchResultGsons) {
+                                       shows.add(new Show(gson));
+                                   }
+                                   _searchAdapter.swapData(shows);
+                               }
+                           },
+                        new Action1<Throwable>() {
+                            @Override
+                            public void call(Throwable throwable) {
+                                _searchAdapter.swapData(new ArrayList<Show>());
+                                Toast.makeText(getActivity(), throwable.toString(), Toast.LENGTH_LONG).show();
+                            }
+                        });
 	}
 
-	private void addSearchResultToList(SearchResultGson searchResult) {
+	private void addSearchResultToList(Show searchResult) {
         Document document = _database.createDocument();
-        Map<String, Object> props = searchResult.getDocumentProperties();
         try {
-            document.putProperties(props);
+            document.putProperties(searchResult);
         } catch (CouchbaseLiteException e) {
             e.printStackTrace();
         }
@@ -155,7 +159,7 @@ public class ShowsSearchFragment extends BaseInjectableFragment implements Actio
         switch(item.getItemId()) {
             case R.id.action_add:
                 int selectedPosition = (Integer)_actionMode.getTag();
-                SearchResultGson searchResult = _searchAdapter.getItem(selectedPosition);
+                Show searchResult = _searchAdapter.getItem(selectedPosition);
                 addSearchResultToList(searchResult);
                 mode.finish();
                 return true;

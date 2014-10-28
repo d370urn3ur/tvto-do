@@ -2,11 +2,9 @@ package the.autarch.tvto_do.adapter;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
-import android.support.v7.graphics.Palette;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
@@ -16,7 +14,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Transformation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,11 +22,11 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.fragment.ShowsListFragment;
-import the.autarch.tvto_do.model.SearchResultGson;
+import the.autarch.tvto_do.model.Show;
 
 public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder> {
 
-    private List<SearchResultGson> _data = new ArrayList<SearchResultGson>();
+    private List<Show> _data = new ArrayList<Show>();
 
 	private int _expandedPosition = -1;
 
@@ -52,7 +49,7 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
 		_outOfDateColor = r.getColor(R.color.show_cell_out_of_date_bg);
 	}
 
-    public SearchResultGson getItem(int i) {
+    public Show getItem(int i) {
         return _data.get(i);
     }
 
@@ -64,7 +61,7 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
 
     @Override
     public void onBindViewHolder(ShowCellHolder showCellHolder, int i) {
-        SearchResultGson show = _data.get(i);
+        Show show = _data.get(i);
         showCellHolder.populateWithShowAtPosition(show, i);
     }
 
@@ -86,7 +83,7 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
         }
 	}
 
-    public void swapData(List<SearchResultGson> data) {
+    public void swapData(List<Show> data) {
         _expandedPosition = -1;
         _data.clear();
         if(data != null) {
@@ -110,22 +107,11 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
             ButterKnife.inject(this, itemView);
 		}
 		
-		void populateWithShowAtPosition(final SearchResultGson show, final int position) {
+		void populateWithShowAtPosition(final Show show, final int position) {
 
-            int bgColor;
-            if(show.hasEnded()) {
-                bgColor = _endedColor;
-//            } else if(show.isOutOfDate()) {
-//                bgColor = _outOfDateColor;
-            } else {
-                bgColor = Color.WHITE;
-            }
-
-            itemView.setBackgroundColor(bgColor);
-
-//            _nextTitle.setText(show.prettyNextEpisode());
-//            _nextDate.setText(show.prettyNextDate(_context, dateFormatFlags));
-//            _overview.setText(show.getOverview());
+            _nextTitle.setText(show.prettyNextEpisode());
+            _nextDate.setText(show.prettyStatus());
+            _overview.setText(show.overview);
 
             if(_expandedPosition == position) {
                 _overview.setVisibility(View.VISIBLE);
@@ -139,7 +125,6 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
                     .load(show.getPoster300Url())
                     .placeholder(R.drawable.poster_dark)
                     .error(R.drawable.poster_dark)
-//                    .transform(new PaletteGrabberTransformation(show))
                     .into(_iv);
 
             itemView.setOnClickListener(new View.OnClickListener() {
@@ -166,36 +151,4 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
             _overview.setTextColor(Color.WHITE);
         }
 	}
-
-    class PaletteGrabberTransformation implements Transformation {
-
-        private SearchResultGson show;
-
-        PaletteGrabberTransformation(SearchResultGson show) {
-            this.show = show;
-        }
-
-        @Override
-        public Bitmap transform(Bitmap source) {
-
-                Palette palette = Palette.generate(source);
-                Palette.Swatch swatch = palette.getLightMutedSwatch();
-
-                int startBg = palette.getLightVibrantColor(Color.WHITE);
-                int endBg = swatch.getRgb() - 0x20000000;
-                int titleColor = swatch.getTitleTextColor();
-                int bodyColor = swatch.getBodyTextColor();
-
-                GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP, new int[] {startBg, endBg});
-
-//                show.setColorInfo(bg, titleColor, bodyColor);
-
-            return source;
-        }
-
-        @Override
-        public String key() {
-            return "paletteGrabber()";
-        }
-    }
 }

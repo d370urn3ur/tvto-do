@@ -50,10 +50,10 @@ public class ApplicationModule {
             View showsView = db.getView("shows");
             showsView.setMap(new Mapper() {
                 @Override
-                public void map(Map<String, Object> stringObjectMap, Emitter emitter) {
-                    emitter.emit("title", stringObjectMap.get("title"));
+                public void map(Map<String, Object> documentProperties, Emitter emitter) {
+                    emitter.emit("show", documentProperties);
                 }
-            }, "1");
+            }, "5");
 
             return db;
 
