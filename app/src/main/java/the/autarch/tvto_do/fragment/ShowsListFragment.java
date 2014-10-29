@@ -32,6 +32,7 @@ import rx.Observable;
 import rx.android.observables.AndroidObservable;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.observables.ConnectableObservable;
 import rx.subscriptions.CompositeSubscription;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.adapter.ShowAdapter;
@@ -111,39 +112,46 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
             _showsQuery = _database.getView("shows").createQuery().toLiveQuery();
         }
 
-        _uiSubscriptions.add(AndroidObservable.bindFragment(this, Observable.create(new CBLLiveQueryChangeEventObservable(_showsQuery))
-                        .map(new Func1<LiveQuery.ChangeEvent, List<Show>>() {
+        ConnectableObservable<List<Show>> liveQueryUpdate = Observable.create(new CBLLiveQueryChangeEventObservable(_showsQuery))
+                .map(new Func1<LiveQuery.ChangeEvent, List<Show>>() {
+                    @Override
+                    public List<Show> call(LiveQuery.ChangeEvent changeEvent) {
+                        List<Show> results = new ArrayList<Show>();
+                        for (Iterator<QueryRow> it = changeEvent.getRows(); it.hasNext();) {
+                            QueryRow next = it.next();
+                            Map<String, Object> properties = (Map<String, Object>)next.getValue();
+                            results.add(new Show(properties));
+                        }
+                        return results;
+                    }
+                })
+                .publish();
+
+        _uiSubscriptions.add(AndroidObservable.bindFragment(this, liveQueryUpdate)
+                        .subscribe(new Action1<List<Show>>() {
                             @Override
-                            public List<Show> call(LiveQuery.ChangeEvent changeEvent) {
-                                List<Show> results = new ArrayList<Show>();
-                                for (Iterator<QueryRow> it = changeEvent.getRows(); it.hasNext();) {
-                                    QueryRow next = it.next();
-                                    Map<String, Object> properties = (Map<String, Object>)next.getValue();
-                                    results.add(new Show(properties));
-                                }
-                                return results;
+                            public void call(List<Show> shows) {
+                                _showAdapter.swapData(shows);
                             }
                         })
-                )
-                .subscribe(new Action1<List<Show>>() {
+        );
+
+        _uiSubscriptions.add(AndroidObservable.bindFragment(this, liveQueryUpdate
+                .flatMap(new Func1<List<Show>, Observable<Show>>() {
                     @Override
-                    public void call(List<Show> shows) {
-                        _showAdapter.swapData(shows);
+                    public Observable<Show> call(List<Show> shows) {
+                        return Observable.from(shows);
+                    }
+                }))
+                .subscribe(new Action1<Show>() {
+                    @Override
+                    public void call(Show show) {
+                        // TODO: if show is out of date, get update
                     }
                 })
         );
 
-        _showsQuery.addChangeListener(new LiveQuery.ChangeListener() {
-            @Override
-            public void changed(final LiveQuery.ChangeEvent changeEvent) {
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-
-                    }
-                });
-            }
-        });
+        liveQueryUpdate.connect();
 
         _showsQuery.start();
     }
