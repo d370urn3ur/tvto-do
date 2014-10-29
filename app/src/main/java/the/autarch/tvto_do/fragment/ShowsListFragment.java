@@ -21,22 +21,24 @@ import com.couchbase.lite.QueryRow;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
 import javax.inject.Inject;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
-import rx.Subscription;
+import rx.Observable;
 import rx.android.observables.AndroidObservable;
 import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.subscriptions.CompositeSubscription;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.adapter.ShowAdapter;
 import the.autarch.tvto_do.model.ExtendedInfo;
 import the.autarch.tvto_do.model.Show;
 import the.autarch.tvto_do.network.ApiManager;
+import the.autarch.tvto_do.util.CBLLiveQueryChangeEventObservable;
 
 public class ShowsListFragment extends BaseInjectableFragment implements ActionMode.Callback {
 	
@@ -49,28 +51,14 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
 
     @InjectView(R.id.shows_recycler_view) RecyclerView _recyclerView;
 
-    private Queue<Subscription> _extInfoSubscriptions = new LinkedList<Subscription>();
-
-    @Override
-    public void onStart() {
-        super.onStart();
-//        EventBus.getDefault().register(this);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-//        EventBus.getDefault().unregister(this);
-    }
+    private CompositeSubscription _extendedInfoSubscriptions = new CompositeSubscription();
+    private CompositeSubscription _uiSubscriptions = new CompositeSubscription();
 
     @Override
     public void onDestroy() {
         super.onDestroy();
 
-        while(_extInfoSubscriptions.size() > 0) {
-            Subscription s = _extInfoSubscriptions.remove();
-            s.unsubscribe();
-        }
+        _extendedInfoSubscriptions.clear();
     }
 
     @Override
@@ -102,21 +90,56 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
         super.onActivityCreated(savedInstanceState);
 
         inject();
+    }
 
-        _showsQuery = _database.getView("shows").createQuery().toLiveQuery();
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        resumeUi();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        pauseUi();
+    }
+
+    private void resumeUi() {
+        if(_showsQuery == null) {
+            _showsQuery = _database.getView("shows").createQuery().toLiveQuery();
+        }
+
+        _uiSubscriptions.add(AndroidObservable.bindFragment(this, Observable.create(new CBLLiveQueryChangeEventObservable(_showsQuery))
+                        .map(new Func1<LiveQuery.ChangeEvent, List<Show>>() {
+                            @Override
+                            public List<Show> call(LiveQuery.ChangeEvent changeEvent) {
+                                List<Show> results = new ArrayList<Show>();
+                                for (Iterator<QueryRow> it = changeEvent.getRows(); it.hasNext();) {
+                                    QueryRow next = it.next();
+                                    Map<String, Object> properties = (Map<String, Object>)next.getValue();
+                                    results.add(new Show(properties));
+                                }
+                                return results;
+                            }
+                        })
+                )
+                .subscribe(new Action1<List<Show>>() {
+                    @Override
+                    public void call(List<Show> shows) {
+                        _showAdapter.swapData(shows);
+                    }
+                })
+        );
+
         _showsQuery.addChangeListener(new LiveQuery.ChangeListener() {
             @Override
             public void changed(final LiveQuery.ChangeEvent changeEvent) {
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        ArrayList<Show> results = new ArrayList<Show>();
-                        for (Iterator<QueryRow> it = changeEvent.getRows(); it.hasNext();) {
-                            QueryRow next = it.next();
-                            Map<String, Object> properties = (Map<String, Object>)next.getValue();
-                            results.add(new Show(properties));
-                        }
-                        _showAdapter.swapData(results);
+
                     }
                 });
             }
@@ -125,10 +148,8 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
         _showsQuery.start();
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        _showAdapter.notifyDataSetChanged();
+    private void pauseUi() {
+        _uiSubscriptions.clear();
     }
 
     public interface ShowSelector {
@@ -208,7 +229,7 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
 
 	private void refreshShowExtendedInfo(final Show show) {
 
-        Subscription s = AndroidObservable.bindFragment(this, ApiManager.getExtendedInfo(show.tvrageId))
+        _extendedInfoSubscriptions.add(AndroidObservable.bindFragment(this, ApiManager.getExtendedInfo(show.tvrageId))
                 .subscribe(new Action1<ExtendedInfo>() {
                     @Override
                     public void call(ExtendedInfo extendedInfo) {
@@ -220,8 +241,7 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
                             e.printStackTrace();
                         }
                     }
-                });
-
-        _extInfoSubscriptions.add(s);
+                })
+        );
 	}
 }
