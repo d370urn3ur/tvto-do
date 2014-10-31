@@ -32,7 +32,6 @@ import rx.Observable;
 import rx.android.observables.AndroidObservable;
 import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.observables.ConnectableObservable;
 import rx.subscriptions.CompositeSubscription;
 import the.autarch.tvto_do.R;
 import the.autarch.tvto_do.adapter.ShowAdapter;
@@ -42,11 +41,6 @@ import the.autarch.tvto_do.network.ApiManager;
 import the.autarch.tvto_do.util.CBLLiveQueryChangeEventObservable;
 
 public class ShowsListFragment extends BaseInjectableFragment implements ActionMode.Callback {
-	
-	private ShowAdapter _showAdapter;
-	private ActionMode _actionMode;
-
-    private LiveQuery _showsQuery;
 
     @Inject Database _database;
 
@@ -55,12 +49,9 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
     private CompositeSubscription _extendedInfoSubscriptions = new CompositeSubscription();
     private CompositeSubscription _uiSubscriptions = new CompositeSubscription();
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-        _extendedInfoSubscriptions.clear();
-    }
+    private ShowAdapter _showAdapter;
+    private ActionMode _actionMode;
+    private LiveQuery _showsQuery;
 
     @Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -78,20 +69,9 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-		
-		_showAdapter = new ShowAdapter(getActivity(), _selector);
 
-        _recyclerView.setHasFixedSize(true);
-        _recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2, GridLayoutManager.VERTICAL, false));
-        _recyclerView.setAdapter(_showAdapter);
+        initUi();
 	}
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        inject();
-    }
 
     @Override
     public void onResume() {
@@ -107,57 +87,62 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
         pauseUi();
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        _extendedInfoSubscriptions.clear();
+    }
+
+    private void initUi() {
+
+        _showAdapter = new ShowAdapter(getActivity(), _selector);
+
+        _recyclerView.setHasFixedSize(true);
+        _recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2, GridLayoutManager.VERTICAL, false));
+        _recyclerView.setAdapter(_showAdapter);
+    }
+
     private void resumeUi() {
+
         if(_showsQuery == null) {
             _showsQuery = _database.getView("shows").createQuery().toLiveQuery();
+
+            _uiSubscriptions.add(
+                    AndroidObservable.bindFragment(this,
+                            Observable.create(new CBLLiveQueryChangeEventObservable(_showsQuery))
+                            .map(new Func1<LiveQuery.ChangeEvent, List<Show>>() {
+                                @Override
+                                public List<Show> call(LiveQuery.ChangeEvent changeEvent) {
+                                    List<Show> results = new ArrayList<Show>();
+                                    for (Iterator<QueryRow> it = changeEvent.getRows(); it.hasNext(); ) {
+                                        QueryRow next = it.next();
+                                        Map<String, Object> properties = (Map<String, Object>) next.getValue();
+                                        results.add(new Show(properties));
+                                    }
+                                    return results;
+                                }
+                            })
+                            .filter(new Func1<List<Show>, Boolean>() {
+                                @Override
+                                public Boolean call(List<Show> shows) {
+                                    return shows.size() > 0;
+                                }
+                            }))
+                            .subscribe(new Action1<List<Show>>() {
+                                @Override
+                                public void call(List<Show> shows) {
+                                    _showAdapter.swapData(shows);
+                                }
+                            })
+            );
         }
-
-        ConnectableObservable<List<Show>> liveQueryUpdate = Observable.create(new CBLLiveQueryChangeEventObservable(_showsQuery))
-                .map(new Func1<LiveQuery.ChangeEvent, List<Show>>() {
-                    @Override
-                    public List<Show> call(LiveQuery.ChangeEvent changeEvent) {
-                        List<Show> results = new ArrayList<Show>();
-                        for (Iterator<QueryRow> it = changeEvent.getRows(); it.hasNext();) {
-                            QueryRow next = it.next();
-                            Map<String, Object> properties = (Map<String, Object>)next.getValue();
-                            results.add(new Show(properties));
-                        }
-                        return results;
-                    }
-                })
-                .publish();
-
-        _uiSubscriptions.add(AndroidObservable.bindFragment(this, liveQueryUpdate)
-                        .subscribe(new Action1<List<Show>>() {
-                            @Override
-                            public void call(List<Show> shows) {
-                                _showAdapter.swapData(shows);
-                            }
-                        })
-        );
-
-        _uiSubscriptions.add(AndroidObservable.bindFragment(this, liveQueryUpdate
-                .flatMap(new Func1<List<Show>, Observable<Show>>() {
-                    @Override
-                    public Observable<Show> call(List<Show> shows) {
-                        return Observable.from(shows);
-                    }
-                }))
-                .subscribe(new Action1<Show>() {
-                    @Override
-                    public void call(Show show) {
-                        // TODO: if show is out of date, get update
-                    }
-                })
-        );
-
-        liveQueryUpdate.connect();
 
         _showsQuery.start();
     }
 
     private void pauseUi() {
-        _uiSubscriptions.clear();
+        _showsQuery.stop();
     }
 
     public interface ShowSelector {

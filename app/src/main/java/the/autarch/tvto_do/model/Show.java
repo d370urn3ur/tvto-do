@@ -96,6 +96,10 @@ public class Show extends CBLObject {
         }
     }
 
+    public boolean isOutOfDate() {
+        return getStatus() == ShowSchema.ShowStatus.OUT_OF_DATE;
+    }
+
     public String getPrettyDate() {
         if(nextEpisodeDate == null) {
             return "Unknown";

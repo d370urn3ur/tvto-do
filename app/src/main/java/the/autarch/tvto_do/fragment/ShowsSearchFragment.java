@@ -62,6 +62,24 @@ public class ShowsSearchFragment extends BaseInjectableFragment implements Actio
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        initUi();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        resumeUi();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        pauseUi();
+    }
+
+    private void initUi() {
         _searchAdapter = new SearchResultAdapter(getActivity(), R.layout.search_cell, _searchSelector);
 
         _recyclerView.setHasFixedSize(true);
@@ -69,17 +87,11 @@ public class ShowsSearchFragment extends BaseInjectableFragment implements Actio
         _recyclerView.setAdapter(_searchAdapter);
     }
 
-    @Override
-	public void onActivityCreated(Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
+    private void resumeUi() {
 
-        inject();
-	}
+    }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-
+    private void pauseUi() {
         if(_searchSubscription != null && !_searchSubscription.isUnsubscribed()) {
             _searchSubscription.unsubscribe();
             _searchSubscription = null;
