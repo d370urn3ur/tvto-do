@@ -21,13 +21,13 @@ public class ExtendedInfo {
     public Map<String, Object> toMap() {
         return new HashMap<String, Object>() {{
             if(nextEpisodeTime != null) {
-                put(ShowSchema.KEY_NEXT_EPISODE_DATE, nextEpisodeTime);
+                put(Show.KEY_NEXT_EPISODE_DATE, nextEpisodeTime);
             }
             if(nextEpisodeTitle != null) {
-                put(ShowSchema.KEY_NEXT_EPISODE_TITLE, nextEpisodeTitle);
+                put(Show.KEY_NEXT_EPISODE_TITLE, nextEpisodeTitle);
             }
             if(ended != null) {
-                put(ShowSchema.KEY_ENDED, ended);
+                put(Show.KEY_ENDED, ended);
             }
         }};
     }

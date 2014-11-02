@@ -7,10 +7,10 @@ import com.couchbase.lite.Database;
 import com.couchbase.lite.Emitter;
 import com.couchbase.lite.Manager;
 import com.couchbase.lite.Mapper;
-import com.couchbase.lite.View;
 import com.couchbase.lite.android.AndroidContext;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Singleton;
@@ -18,7 +18,7 @@ import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
 import the.autarch.tvto_do.TVTDApplication;
-import the.autarch.tvto_do.model.ShowSchema;
+import the.autarch.tvto_do.model.Show;
 
 /**
  * Created by joshua.pierce on 27/10/14.
@@ -41,30 +41,53 @@ public class ApplicationModule {
         return application;
     }
 
-    @Provides @Singleton
-    Database provideDatabase() {
+    @Provides @Singleton Manager provideCBLManager(@ForApplication Context appContext) {
         try {
-            Manager manager = new Manager(new AndroidContext(application), Manager.DEFAULT_OPTIONS);
+            return new Manager(new AndroidContext(application), Manager.DEFAULT_OPTIONS);
+        } catch (IOException e) {
+            throw new RuntimeException("error instantiating CBLManager", e);
+        }
+    }
+
+    @Provides @Singleton
+    Database provideDatabase(Manager manager) {
+        try {
+
             Database db = manager.getDatabase("saved-shows");
-
-            // setup all views here ?
-            View showsView = db.getView("shows");
-            showsView.setMap(new Mapper() {
-                @Override
-                public void map(Map<String, Object> documentProperties, Emitter emitter) {
-                    Object name = documentProperties.get(ShowSchema.KEY_TITLE);
-                    emitter.emit(name, documentProperties);
-                }
-            }, "6");
-
+            createCBLViews(db);
             return db;
 
-        } catch(IOException e) {
-//            Ln.e("got exception starting CBL manager: %s", e.toString());
-            return null;
         } catch(CouchbaseLiteException e) {
-//            Ln.e("got exception getting database: %s", e.toString());
-            return null;
+            throw new RuntimeException("error instantiating CBLDatabase", e);
         }
+    }
+
+    private void createCBLViews(Database db) {
+
+        // shows view
+        db.getView("shows")
+        .setMap(new Mapper() {
+            @Override
+            public void map(Map<String, Object> documentProperties, Emitter emitter) {
+                Object name = documentProperties.get(Show.KEY_TITLE);
+                emitter.emit(name, documentProperties);
+            }
+        }, "6");
+
+        // update shows view
+        db.getView("shows-update")
+                .setMap(new Mapper() {
+                    @Override
+                    public void map(final Map<String, Object> stringObjectMap, Emitter emitter) {
+
+                        Map<String, Object> update = new HashMap<String, Object>() {{
+                            put(Show.KEY_TVRAGE_ID, stringObjectMap.get(Show.KEY_TVRAGE_ID));
+                            put("_id", stringObjectMap.get("_id"));
+                            put(Show.KEY_NEXT_EPISODE_DATE, stringObjectMap.get(Show.KEY_NEXT_EPISODE_DATE);
+                        }};
+
+                        emitter.emit(stringObjectMap.get(Show.KEY_TVRAGE_ID), update);
+                    }
+                }, "2");
     }
 }

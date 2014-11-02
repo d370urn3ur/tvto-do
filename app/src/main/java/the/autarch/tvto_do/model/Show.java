@@ -9,40 +9,63 @@ import java.util.Map;
  */
 public class Show extends CBLObject {
 
-    @CBLProperty(name=ShowSchema.KEY_TITLE)
+    public enum ShowStatus {
+        ENDED,
+        OUT_OF_DATE,
+        UP_TO_DATE,
+        UNKNOWN
+    }
+
+    public static final String KEY_TITLE = "title";
+    public static final String KEY_YEAR = "year";
+    public static final String KEY_URL = "url";
+    public static final String KEY_COUNTRY = "country";
+    public static final String KEY_OVERVIEW = "overview";
+    public static final String KEY_IMDB_ID = "imdb_id";
+    public static final String KEY_TVDB_ID = "tvdb_id";
+    public static final String KEY_TVRAGE_ID = "tvrage_id";
+    public static final String KEY_ENDED = "ended";
+    public static final String KEY_IMAGES = "images";
+
+    public static final String KEY_NEXT_EPISODE_TITLE = "next_episode_title";
+    public static final String KEY_NEXT_EPISODE_DATE = "next_episode_date";
+
+    public static final String KEY_POSTER = "poster";
+
+    @CBLPropertyName(KEY_TITLE)
     public String title;
 
-    @CBLProperty(name=ShowSchema.KEY_YEAR)
+    @CBLPropertyName(KEY_YEAR)
     public String year;
 
-    @CBLProperty(name=ShowSchema.KEY_URL)
+    @CBLPropertyName(KEY_URL)
     public String url;
 
-    @CBLProperty(name=ShowSchema.KEY_COUNTRY)
+    @CBLPropertyName(KEY_COUNTRY)
     public String country;
 
-    @CBLProperty(name=ShowSchema.KEY_OVERVIEW)
+    @CBLPropertyName(KEY_OVERVIEW)
     public String overview;
 
-    @CBLProperty(name=ShowSchema.KEY_IMDB_ID)
+    @CBLPropertyName(KEY_IMDB_ID)
     public String imdbId;
 
-    @CBLProperty(name=ShowSchema.KEY_TVDB_ID)
+    @CBLPropertyName(KEY_TVDB_ID)
     public String tvdbId;
 
-    @CBLProperty(name=ShowSchema.KEY_TVRAGE_ID)
+    @CBLPropertyName(KEY_TVRAGE_ID)
     public String tvrageId;
 
-    @CBLProperty(name=ShowSchema.KEY_ENDED)
+    @CBLPropertyName(KEY_ENDED)
     public Boolean ended;
 
-    @CBLProperty(name=ShowSchema.KEY_POSTER)
+    @CBLPropertyName(KEY_POSTER)
     public String posterUrl;
 
-    @CBLProperty(name=ShowSchema.KEY_NEXT_EPISODE_DATE)
+    @CBLPropertyName(KEY_NEXT_EPISODE_DATE)
     public Number nextEpisodeDate;
 
-    @CBLProperty(name=ShowSchema.KEY_NEXT_EPISODE_TITLE)
+    @CBLPropertyName(KEY_NEXT_EPISODE_TITLE)
     public String nextEpisodeTitle;
 
     public Show(Map<String, Object> data) {
@@ -68,18 +91,18 @@ public class Show extends CBLObject {
         return ended != null && ended;
     }
 
-    private ShowSchema.ShowStatus getStatus() {
+    private ShowStatus getStatus() {
         if(hasEnded()) {
-            return ShowSchema.ShowStatus.ENDED;
+            return ShowStatus.ENDED;
         }
         if(nextEpisodeDate == null) {
-            return ShowSchema.ShowStatus.UNKNOWN;
+            return ShowStatus.UNKNOWN;
         }
 
         if(nextEpisodeDate.longValue() < new Date().getTime()) {
-            return ShowSchema.ShowStatus.OUT_OF_DATE;
+            return ShowStatus.OUT_OF_DATE;
         } else {
-            return ShowSchema.ShowStatus.UP_TO_DATE;
+            return ShowStatus.UP_TO_DATE;
         }
     }
 
@@ -97,7 +120,7 @@ public class Show extends CBLObject {
     }
 
     public boolean isOutOfDate() {
-        return getStatus() == ShowSchema.ShowStatus.OUT_OF_DATE;
+        return getStatus() == ShowStatus.OUT_OF_DATE;
     }
 
     public String getPrettyDate() {

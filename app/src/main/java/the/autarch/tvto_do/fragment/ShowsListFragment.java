@@ -2,14 +2,17 @@ package the.autarch.tvto_do.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -52,6 +55,7 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
     private ShowAdapter _showAdapter;
     private ActionMode _actionMode;
     private LiveQuery _showsQuery;
+    private GestureDetectorCompat _gestDetect;
 
     @Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -94,13 +98,40 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
         _extendedInfoSubscriptions.clear();
     }
 
+    /****************************************** UI *****************************************/
+
     private void initUi() {
 
-        _showAdapter = new ShowAdapter(getActivity(), _selector);
+        _showAdapter = new ShowAdapter(getActivity());
 
         _recyclerView.setHasFixedSize(true);
         _recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2, GridLayoutManager.VERTICAL, false));
         _recyclerView.setAdapter(_showAdapter);
+
+        _gestDetect = new GestureDetectorCompat(getActivity(), new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onSingleTapConfirmed(MotionEvent e) {
+                View childView = _recyclerView.findChildViewUnder(e.getX(), e.getY());
+                if(childView == null) {
+                    return false;
+                }
+                int position = _recyclerView.getChildPosition(childView);
+                onShowSelected(position);
+                return true;
+            }
+        });
+
+        _recyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
+            @Override
+            public boolean onInterceptTouchEvent(RecyclerView recyclerView, MotionEvent motionEvent) {
+                return _gestDetect.onTouchEvent(motionEvent);
+            }
+
+            @Override
+            public void onTouchEvent(RecyclerView recyclerView, MotionEvent motionEvent) {
+                // NOTE: event will be consumed by GestureDetector
+            }
+        });
     }
 
     private void resumeUi() {
@@ -145,32 +176,56 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
         _showsQuery.stop();
     }
 
-    public interface ShowSelector {
-        public void onShowSelected(int position);
+    /************************* DATA MANIPULATION ********************************/
+
+    private void onShowSelected(int position) {
+
+        _showAdapter.expandPosition(position);
+
+        if(_actionMode != null) {
+            int selectedPos = (Integer)_actionMode.getTag();
+            if(selectedPos == position) {
+                _actionMode.finish();
+                _actionMode = null;
+            } else {
+                _actionMode.setTag(position);
+            }
+            return;
+        }
+
+        // Start the CAB using the ActionMode.Callback defined above
+        _actionMode = ((ActionBarActivity)getActivity()).startSupportActionMode(ShowsListFragment.this);
+        _actionMode.setTag(position);
     }
 
-    private ShowSelector _selector = new ShowSelector() {
-        @Override
-        public void onShowSelected(int position) {
-            _showAdapter.expandPosition(position);
-            _showAdapter.notifyDataSetChanged();
-
-            if(_actionMode != null) {
-                int selectedPos = (Integer)_actionMode.getTag();
-                if(selectedPos == position) {
-                    _actionMode.finish();
-                    _actionMode = null;
-                } else {
-                    _actionMode.setTag(position);
-                }
-                return;
-            }
-
-            // Start the CAB using the ActionMode.Callback defined above
-            _actionMode = ((ActionBarActivity)getActivity()).startSupportActionMode(ShowsListFragment.this);
-            _actionMode.setTag(position);
+    private void removeShowFromList(Show show) {
+        Document document = _database.getDocument(show.getId());
+        try {
+            document.delete();
+        } catch (CouchbaseLiteException e) {
+            e.printStackTrace();
         }
-    };
+    }
+
+    private void refreshShowExtendedInfo(final Show show) {
+
+        _extendedInfoSubscriptions.add(AndroidObservable.bindFragment(this, ApiManager.getExtendedInfo(show.tvrageId))
+                        .subscribe(new Action1<ExtendedInfo>() {
+                            @Override
+                            public void call(ExtendedInfo extendedInfo) {
+                                show.updateExtendedInfo(extendedInfo);
+                                Document document = _database.getDocument(show.getId());
+                                try {
+                                    document.putProperties(show);
+                                } catch (CouchbaseLiteException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        })
+        );
+    }
+
+    /*********************** ACTION MODE *******************************/
 
 	@Override
 	public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
@@ -202,39 +257,11 @@ public class ShowsListFragment extends BaseInjectableFragment implements ActionM
 	@Override
 	public void onDestroyActionMode(ActionMode arg0) {
 		_actionMode = null;
-        _showAdapter.expandPosition(-1);
-        _showAdapter.notifyDataSetChanged();
+        _showAdapter.clearExpandedPosition();
 	}
 
 	@Override
 	public boolean onPrepareActionMode(ActionMode arg0, Menu arg1) {
 		return false;
-	}
-	
-	private void removeShowFromList(Show show) {
-        Document document = _database.getDocument(show.getId());
-        try {
-            document.delete();
-        } catch (CouchbaseLiteException e) {
-            e.printStackTrace();
-        }
-    }
-
-	private void refreshShowExtendedInfo(final Show show) {
-
-        _extendedInfoSubscriptions.add(AndroidObservable.bindFragment(this, ApiManager.getExtendedInfo(show.tvrageId))
-                .subscribe(new Action1<ExtendedInfo>() {
-                    @Override
-                    public void call(ExtendedInfo extendedInfo) {
-                        show.updateExtendedInfo(extendedInfo);
-                        Document document = _database.getDocument(show.getId());
-                        try {
-                            document.putProperties(show);
-                        } catch (CouchbaseLiteException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                })
-        );
 	}
 }

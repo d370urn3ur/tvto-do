@@ -17,9 +17,9 @@ public class CBLObject extends HashMap<String, Object> {
     protected void annotate() {
         Class c = this.getClass();
         for(Field f : c.getFields()) {
-            CBLProperty anno = f.getAnnotation(CBLProperty.class);
+            CBLPropertyName anno = f.getAnnotation(CBLPropertyName.class);
             if(anno != null) {
-                String key = anno.name();
+                String key = anno.value();
                 try {
                     f.set(this, get(key));
                 } catch(IllegalAccessException e) {

@@ -5,6 +5,7 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
@@ -21,28 +22,27 @@ import java.util.List;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import the.autarch.tvto_do.R;
-import the.autarch.tvto_do.fragment.ShowsListFragment;
 import the.autarch.tvto_do.model.Show;
 
 public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder> {
 
     private List<Show> _data = new ArrayList<Show>();
 
-	private int _expandedPosition = -1;
+    private static final int EXPANDED_POSITION_CLEAR = -1;
+
+	private int _expandedPosition = EXPANDED_POSITION_CLEAR;
 
     private Context _context;
-    private ShowsListFragment.ShowSelector _clickListener;
     private LayoutInflater _inflater;
 	
 	// colors
 	private int _endedColor;
 	private int _outOfDateColor;
 	
-	public ShowAdapter(Context context, ShowsListFragment.ShowSelector clickListener) {
+	public ShowAdapter(Context context) {
         super();
 
 		_context = context;
-        _clickListener = clickListener;
         _inflater = LayoutInflater.from(context);
 		Resources r = context.getResources();
 		_endedColor = r.getColor(R.color.show_cell_ended_bg);
@@ -77,14 +77,20 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
 
     public void expandPosition(Integer position) {
 		if(_expandedPosition == position) {
-            _expandedPosition = -1;
+            _expandedPosition = EXPANDED_POSITION_CLEAR;
         } else {
             _expandedPosition = position;
         }
+        notifyDataSetChanged();
 	}
 
+    public void clearExpandedPosition() {
+        _expandedPosition = EXPANDED_POSITION_CLEAR;
+        notifyDataSetChanged();
+    }
+
     public void swapData(List<Show> data) {
-        _expandedPosition = -1;
+        _expandedPosition = EXPANDED_POSITION_CLEAR;
         _data.clear();
         if(data != null) {
             _data.addAll(data);
@@ -104,6 +110,7 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
 		public ShowCellHolder(View itemView) {
             super(itemView);
             ButterKnife.inject(this, itemView);
+            ((CardView)itemView).setMaxCardElevation(5);
 		}
 		
 		void populateWithShowAtPosition(final Show show, final int position) {
@@ -113,18 +120,19 @@ public class ShowAdapter extends RecyclerView.Adapter<ShowAdapter.ShowCellHolder
 
             setGradientBackground();
 
+            CardView cardView = (CardView)itemView;
+
+            if(position == _expandedPosition) {
+                cardView.setCardElevation(5);
+            } else {
+                cardView.setCardElevation(2);
+            }
+
             Picasso.with(_context)
                     .load(show.getPoster138Url())
                     .placeholder(R.drawable.poster_dark)
                     .error(R.drawable.poster_dark)
                     .into(_iv);
-
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    _clickListener.onShowSelected(position);
-                }
-            });
 		}
 
         private void setGradientBackground() {
